@@ -1,0 +1,28 @@
+os: linux
+dist: focal
+language: cpp
+
+before_install:
+    - sudo apt-get update -qq
+    - sudo apt-get install -y doxygen graphviz 
+
+compiler:
+    - gcc
+    - clang
+
+cache:
+    apt: true
+
+branches:
+    only:
+        - master
+        - devel
+
+before_script:
+    - cmake -S . -B build
+
+# build and test
+script:
+    - cmake --build build/ -j2
+    - cd build && ctest -VV -j2
+
