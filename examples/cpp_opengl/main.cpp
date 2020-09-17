@@ -587,7 +587,7 @@ int WINAPI WinMain (HINSTANCE hInstance,
 	InitCommonControls();
 	hStatus = CreateWindowEx(0, L"msctls_statusbar32", NULL, WS_CHILD | WS_VISIBLE,
 		0, 0, 0, 0, hWnd, (HMENU)0, hInstance, NULL);
-	SetWindowText(hStatus, L" Copyright © Angus Johnson 2011");
+	SetWindowText(hStatus, L" Copyright Â© Angus Johnson 2011");
 
   // Initialize OpenGL
   InitGraphics();
