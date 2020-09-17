@@ -227,40 +227,31 @@ typedef void (*ZFillCallback)(IntPoint &e1bot, IntPoint &e1top, IntPoint &e2bot,
 #endif
 
 /**
- * @brief The InitOptions enum
- */
-enum InitOptions {
-  ioReverseSolution = 1,
-  ioStrictlySimple = 2,
-  ioPreserveCollinear = 4
-};
-
-/**
  * @brief JoinType enum, methods to join the corner of paths
  *
  * TODO: include graphics: http://www.angusj.com/delphi/clipper/documentation/Images/jointypes.png
  * http://www.angusj.com/delphi/clipper/documentation/Docs/Units/ClipperLib/Types/JoinType.htm
  */
-enum JoinType {
-  jtSquare, //! Square the ends
-  jtRound,  //! Round the end
-  jtMiter   //! Miter
+enum class JoinType {
+  Square, //! Square the ends
+  Round,  //! Round the end
+  Miter   //! Miter
 };
 
 /**
  * @brief The EndType enum
  */
-enum EndType {
-  etClosedPolygon,
-  etClosedLine,
-  etOpenButt,
-  etOpenSquare,
-  etOpenRound
+enum class EndType {
+  ClosedPolygon,
+  ClosedLine,
+  OpenButt,
+  OpenSquare,
+  OpenRound
 };
 
 class PolyNode;
 
-//! @typedef
+//! @typedef vector of PolyNode
 typedef std::vector<PolyNode *> PolyNodes;
 
 /**
@@ -414,9 +405,9 @@ struct IntRect {
  * @brief The EdgeSide enum
  * private
  */
-enum EdgeSide {
-  esLeft = 1, //!
-  esRight = 2 //!
+enum class EdgeSide {
+  Left = 1, //!
+  Right = 2 //!
 };
 
 // forward declarations (for stuff used internally) ...
@@ -532,7 +523,7 @@ protected:
  */
 class Clipper : public virtual ClipperBase {
 public:
-  Clipper(int initOptions = 0);
+  Clipper(bool ReverseOutput = false, bool StrictSimple = false, bool PreserveCollinear = false);
   bool Execute(ClipType clipType, Paths &solution,
                PolyFillType fillType = pftEvenOdd);
   bool Execute(ClipType clipType, Paths &solution, PolyFillType subjFillType,

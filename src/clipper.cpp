@@ -1192,7 +1192,7 @@ bool ClipperBase::AddPath(const Path &pg, PolyType PolyTyp, bool Closed)
     locMin.Y = E->Bot.Y;
     locMin.LeftBound = nullptr;
     locMin.RightBound = E;
-    locMin.RightBound->Side = esRight;
+    locMin.RightBound->Side = EdgeSide::Right;
     locMin.RightBound->WindDelta = 0;
     for (;;)
     {
@@ -1296,14 +1296,14 @@ void ClipperBase::Reset()
     TEdge* e = lm.LeftBound;
     if (e) {
       e->Curr = e->Bot;
-      e->Side = esLeft;
+      e->Side = EdgeSide::Left;
       e->OutIdx = Unassigned;
     }
 
     e = lm.RightBound;
     if (e) {
       e->Curr = e->Bot;
-      e->Side = esRight;
+      e->Side = EdgeSide::Right;
       e->OutIdx = Unassigned;
     }
   }
@@ -1507,13 +1507,13 @@ bool ClipperBase::LocalMinimaPending()
 // TClipper methods ...
 //------------------------------------------------------------------------------
 
-Clipper::Clipper(int initOptions) : ClipperBase() //constructor
+//constructor
+Clipper::Clipper(bool ReverseOutput, bool StrictSimple, bool PreserveCollinear) : ClipperBase(), m_ReverseOutput{ReverseOutput},
+  m_StrictSimple{StrictSimple}
 {
   m_ExecuteLocked = false;
   m_UseFullRange = false;
-  m_ReverseOutput = ((initOptions & ioReverseSolution) != 0);
-  m_StrictSimple = ((initOptions & ioStrictlySimple) != 0);
-  m_PreserveCollinear = ((initOptions & ioPreserveCollinear) != 0);
+  m_PreserveCollinear = PreserveCollinear;
   m_HasOpenPaths = false;
 #ifdef use_xyz  
   m_ZFill = 0;
@@ -1880,8 +1880,8 @@ OutPt* Clipper::AddLocalMinPoly(TEdge *e1, TEdge *e2, const IntPoint &Pt)
   {
     result = AddOutPt(e1, Pt);
     e2->OutIdx = e1->OutIdx;
-    e1->Side = esLeft;
-    e2->Side = esRight;
+    e1->Side = EdgeSide::Left;
+    e2->Side = EdgeSide::Right;
     e = e1;
     if (e->PrevInAEL == e2)
       prevE = e2->PrevInAEL; 
@@ -1891,8 +1891,8 @@ OutPt* Clipper::AddLocalMinPoly(TEdge *e1, TEdge *e2, const IntPoint &Pt)
   {
     result = AddOutPt(e2, Pt);
     e1->OutIdx = e2->OutIdx;
-    e1->Side = esRight;
-    e2->Side = esLeft;
+    e1->Side = EdgeSide::Right;
+    e2->Side = EdgeSide::Left;
     e = e2;
     if (e->PrevInAEL == e1)
         prevE = e1->PrevInAEL;
@@ -2420,9 +2420,9 @@ void Clipper::AppendPolygon(TEdge *e1, TEdge *e2)
   OutPt* p2_rt = p2_lft->Prev;
 
   //join e2 poly onto e1 poly and delete pointers to e2 ...
-  if(  e1->Side == esLeft )
+  if(  e1->Side == EdgeSide::Left )
   {
-    if(  e2->Side == esLeft )
+    if(  e2->Side == EdgeSide::Left )
     {
       //z y x a b c
       ReversePolyPtLinks(p2_lft);
@@ -2442,7 +2442,7 @@ void Clipper::AppendPolygon(TEdge *e1, TEdge *e2)
     }
   } else
   {
-    if(  e2->Side == esRight )
+    if(  e2->Side == EdgeSide::Right )
     {
       //a b c z y x
       ReversePolyPtLinks(p2_lft);
@@ -2515,7 +2515,7 @@ OutPt* Clipper::AddOutPt(TEdge *e, const IntPoint &pt)
     //OutRec.Pts is the 'Left-most' point & OutRec.Pts.Prev is the 'Right-most'
     OutPt* op = outRec->Pts;
 
-	bool ToFront = (e->Side == esLeft);
+	bool ToFront = (e->Side == EdgeSide::Left);
 	if (ToFront && (pt == op->Pt)) return op;
     else if (!ToFront && (pt == op->Prev->Pt)) return op->Prev;
 
@@ -2535,7 +2535,7 @@ OutPt* Clipper::AddOutPt(TEdge *e, const IntPoint &pt)
 OutPt* Clipper::GetLastOutPt(TEdge *e)
 {
 	OutRec *outRec = m_PolyOuts[e->OutIdx];
-	if (e->Side == esLeft)
+	if (e->Side == EdgeSide::Left)
 		return outRec->Pts;
 	else
 		return outRec->Pts->Prev;
@@ -3841,7 +3841,7 @@ void ClipperOffset::AddPath(const Path& path, JoinType joinType, EndType endType
   newNode->m_endtype = endType;
 
   //strip duplicate points from path and also get index to the lowest point ...
-  if (endType == etClosedLine || endType == etClosedPolygon)
+  if (endType == EndType::ClosedLine || endType == EndType::ClosedPolygon)
     while (highI > 0 && path[0] == path[highI]) highI--;
   newNode->Contour.reserve(highI + 1);
   newNode->Contour.push_back(path[0]);
@@ -3855,7 +3855,7 @@ void ClipperOffset::AddPath(const Path& path, JoinType joinType, EndType endType
         (path[i].Y == newNode->Contour[k].Y &&
         path[i].X < newNode->Contour[k].X)) k = j;
     }
-  if (endType == etClosedPolygon && j < 2)
+  if (endType == EndType::ClosedPolygon && j < 2)
   {
     delete newNode;
     return;
@@ -3863,7 +3863,7 @@ void ClipperOffset::AddPath(const Path& path, JoinType joinType, EndType endType
   m_polyNodes.AddChild(*newNode);
 
   //if this path's lowest pt is lower than all the others then update m_lowest
-  if (endType != etClosedPolygon) return;
+  if (endType != EndType::ClosedPolygon) return;
   if (m_lowest.X < 0)
     m_lowest = IntPoint(m_polyNodes.ChildCount() - 1, k);
   else
@@ -3894,8 +3894,8 @@ void ClipperOffset::FixOrientations()
     for (int i = 0; i < m_polyNodes.ChildCount(); ++i)
     {
       PolyNode& node = *m_polyNodes.Childs[i];
-      if (node.m_endtype == etClosedPolygon ||
-        (node.m_endtype == etClosedLine && Orientation(node.Contour)))
+      if (node.m_endtype == EndType::ClosedPolygon ||
+        (node.m_endtype == EndType::ClosedLine && Orientation(node.Contour)))
           ReversePath(node.Contour);
     }
   } else
@@ -3903,7 +3903,7 @@ void ClipperOffset::FixOrientations()
     for (int i = 0; i < m_polyNodes.ChildCount(); ++i)
     {
       PolyNode& node = *m_polyNodes.Childs[i];
-      if (node.m_endtype == etClosedLine && !Orientation(node.Contour))
+      if (node.m_endtype == EndType::ClosedLine && !Orientation(node.Contour))
         ReversePath(node.Contour);
     }
   }
@@ -3993,7 +3993,7 @@ void ClipperOffset::DoOffset(double delta)
     for (int i = 0; i < m_polyNodes.ChildCount(); i++)
     {
       PolyNode& node = *m_polyNodes.Childs[i];
-      if (node.m_endtype == etClosedPolygon)
+      if (node.m_endtype == EndType::ClosedPolygon)
         m_destPolys.push_back(node.Contour);
     }
     return;
@@ -4024,13 +4024,13 @@ void ClipperOffset::DoOffset(double delta)
     m_srcPoly = node.Contour;
 
     int len = (int)m_srcPoly.size();
-    if (len == 0 || (delta <= 0 && (len < 3 || node.m_endtype != etClosedPolygon)))
+    if (len == 0 || (delta <= 0 && (len < 3 || node.m_endtype != EndType::ClosedPolygon)))
         continue;
 
     m_destPoly.clear();
     if (len == 1)
     {
-      if (node.m_jointype == jtRound)
+      if (node.m_jointype == JoinType::Round)
       {
         double X = 1.0, Y = 0.0;
         for (cInt j = 1; j <= steps; j++)
@@ -4064,19 +4064,19 @@ void ClipperOffset::DoOffset(double delta)
     m_normals.reserve(len);
     for (int j = 0; j < len - 1; ++j)
       m_normals.push_back(GetUnitNormal(m_srcPoly[j], m_srcPoly[j + 1]));
-    if (node.m_endtype == etClosedLine || node.m_endtype == etClosedPolygon)
+    if (node.m_endtype == EndType::ClosedLine || node.m_endtype == EndType::ClosedPolygon)
       m_normals.push_back(GetUnitNormal(m_srcPoly[len - 1], m_srcPoly[0]));
     else
       m_normals.push_back(DoublePoint(m_normals[len - 2]));
 
-    if (node.m_endtype == etClosedPolygon)
+    if (node.m_endtype == EndType::ClosedPolygon)
     {
       int k = len - 1;
       for (int j = 0; j < len; ++j)
         OffsetPoint(j, k, node.m_jointype);
       m_destPolys.push_back(m_destPoly);
     }
-    else if (node.m_endtype == etClosedLine)
+    else if (node.m_endtype == EndType::ClosedLine)
     {
       int k = len - 1;
       for (int j = 0; j < len; ++j)
@@ -4100,7 +4100,7 @@ void ClipperOffset::DoOffset(double delta)
         OffsetPoint(j, k, node.m_jointype);
 
       IntPoint pt1;
-      if (node.m_endtype == etOpenButt)
+      if (node.m_endtype == EndType::OpenButt)
       {
         int j = len - 1;
         pt1 = IntPoint((cInt)Round(m_srcPoly[j].X + m_normals[j].X *
@@ -4116,7 +4116,7 @@ void ClipperOffset::DoOffset(double delta)
         k = len - 2;
         m_sinA = 0;
         m_normals[j] = DoublePoint(-m_normals[j].X, -m_normals[j].Y);
-        if (node.m_endtype == etOpenSquare)
+        if (node.m_endtype == EndType::OpenSquare)
           DoSquare(j, k);
         else
           DoRound(j, k);
@@ -4130,7 +4130,7 @@ void ClipperOffset::DoOffset(double delta)
       k = len - 1;
       for (int j = k - 1; j > 0; --j) OffsetPoint(j, k, node.m_jointype);
 
-      if (node.m_endtype == etOpenButt)
+      if (node.m_endtype == EndType::OpenButt)
       {
         pt1 = IntPoint((cInt)Round(m_srcPoly[0].X - m_normals[0].X * delta),
           (cInt)Round(m_srcPoly[0].Y - m_normals[0].Y * delta));
@@ -4143,7 +4143,7 @@ void ClipperOffset::DoOffset(double delta)
       {
         k = 1;
         m_sinA = 0;
-        if (node.m_endtype == etOpenSquare)
+        if (node.m_endtype == EndType::OpenSquare)
           DoSquare(0, 1);
         else
           DoRound(0, 1);
@@ -4184,15 +4184,15 @@ void ClipperOffset::OffsetPoint(int j, int& k, JoinType jointype)
   else
     switch (jointype)
     {
-      case jtMiter:
+      case JoinType::Miter:
         {
           double r = 1 + (m_normals[j].X * m_normals[k].X +
             m_normals[j].Y * m_normals[k].Y);
           if (r >= m_miterLim) DoMiter(j, k, r); else DoSquare(j, k);
           break;
         }
-      case jtSquare: DoSquare(j, k); break;
-      case jtRound: DoRound(j, k); break;
+      case JoinType::Square: DoSquare(j, k); break;
+      case JoinType::Round: DoRound(j, k); break;
     }
   k = j;
 }
