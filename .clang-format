@@ -1,7 +1,7 @@
 Language                                       : Cpp
 Standard                                       : c++17
 UseTab                                         : Never
-BreakBeforeBraces                              : Allman
+BreakBeforeBraces                              : Attach
 AllowShortIfStatementsOnASingleLine            : false
 IndentCaseLabels                               : false
 PointerAlignment                               : Left
@@ -10,6 +10,7 @@ BasedOnStyle                                   : LLVM
 AlignAfterOpenBracket                          : true
 AlignEscapedNewlinesLeft                       : true
 AlignConsecutiveAssignments                    : true
+AlignConsecutiveDeclarations                   : true
 AllowShortFunctionsOnASingleLine               : Inline
 AlwaysBreakTemplateDeclarations                : true
 ColumnLimit                                    : 160
@@ -17,7 +18,7 @@ ConstructorInitializerIndentWidth              : 6
 IndentCaseLabels                               : true
 MaxEmptyLinesToKeep                            : 2
 KeepEmptyLinesAtTheStartOfBlocks               : false
-NamespaceIndentation                           : All
+NamespaceIndentation                           : None
 SpacesBeforeTrailingComments                   : 2
 IndentWidth                                    : 2
 TabWidth                                       : 2
