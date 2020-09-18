@@ -212,11 +212,12 @@ struct DoublePoint {
    * @param Y value
    */
   DoublePoint(double x = 0, double y = 0) : X(x), Y(y) {}
+
   /**
    * @brief DoublePoint constructor
    * @param point to copy
    */
-  DoublePoint(IntPoint ip) : X((double)ip.X), Y((double)ip.Y) {}
+  DoublePoint(const IntPoint &ip) : X((double)ip.X), Y((double)ip.Y) {}
 };
 //------------------------------------------------------------------------------
 
@@ -249,6 +250,7 @@ enum class EndType {
   OpenRound
 };
 
+// forward declaration
 class PolyNode;
 
 //! @typedef vector of PolyNode

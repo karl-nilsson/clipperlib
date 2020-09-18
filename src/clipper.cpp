@@ -167,7 +167,7 @@ inline cInt Abs(cInt val)
 
 void PolyTree::Clear()
 {
-  for (auto i: AllNodes)
+  for (auto *i: AllNodes)
       delete i;
   AllNodes.resize(0);
   Childs.resize(0);
@@ -256,19 +256,19 @@ bool PolyNode::IsOpen() const
 
 #ifndef use_int32
 
-//------------------------------------------------------------------------------
-// Int128 class (enables safe math on signed 64bit integers)
-// eg Int128 val1((long64)9223372036854775807); //ie 2^63 -1
-//    Int128 val2((long64)9223372036854775807);
-//    Int128 val3 = val1 * val2;
-//    val3.AsString => "85070591730234615847396907784232501249" (8.5e+37)
-//------------------------------------------------------------------------------
-
+/**
+ * @brief Int128 class (enables safe math on signed 64bit integers)
+ * eg Int128 val1((long64)9223372036854775807); //ie 2^63 -1
+ * Int128 val2((long64)9223372036854775807);
+ * Int128 val3 = val1 * val2;
+ * val3.AsString => "85070591730234615847396907784232501249" (8.5e+37)
+ *
+ */
 class Int128
 {
   public:
-    ulong64 lo;
-    long64 hi;
+    ulong64 lo; //! low value
+    long64 hi;  //! high value
 
     Int128(long64 _lo = 0)
     {
@@ -613,7 +613,7 @@ bool SlopesEqual(const IntPoint pt1, const IntPoint pt2,
 }
 //------------------------------------------------------------------------------
 
-inline bool IsHorizontal(TEdge &e)
+inline bool IsHorizontal(const TEdge &e)
 {
   return e.Dx == HORIZONTAL;
 }
@@ -650,14 +650,14 @@ inline void SwapPolyIndexes(TEdge &Edge1, TEdge &Edge2)
 }
 //------------------------------------------------------------------------------
 
-inline cInt TopX(TEdge &edge, const cInt currentY)
+inline cInt TopX(const TEdge &edge, const cInt currentY)
 {
   return ( currentY == edge.Top.Y ) ?
     edge.Top.X : edge.Bot.X + Round(edge.Dx *(currentY - edge.Bot.Y));
 }
 //------------------------------------------------------------------------------
 
-void IntersectPoint(TEdge &Edge1, TEdge &Edge2, IntPoint &ip)
+void IntersectPoint(const TEdge &Edge1, const TEdge &Edge2, IntPoint &ip)
 {
 #ifdef use_xyz  
   ip.Z = 0;
@@ -2640,7 +2640,7 @@ TEdge* GetNextInAEL(TEdge *e, Direction dir)
 }
 //------------------------------------------------------------------------------
 
-void GetHorzDirection(TEdge& HorzEdge, Direction& Dir, cInt& Left, cInt& Right)
+void GetHorzDirection(const TEdge& HorzEdge, Direction& Dir, cInt& Left, cInt& Right)
 {
   if (HorzEdge.Bot.X < HorzEdge.Top.X)
   {
@@ -3334,7 +3334,7 @@ bool GetOverlap(const cInt a1, const cInt a2, const cInt b1, const cInt b2,
 }
 //------------------------------------------------------------------------------
 
-inline void UpdateOutPtIdxs(OutRec& outrec)
+inline void UpdateOutPtIdxs(const OutRec& outrec)
 {  
   OutPt* op = outrec.Pts;
   do
