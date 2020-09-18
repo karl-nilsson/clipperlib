@@ -1272,10 +1272,8 @@ bool ClipperBase::AddPaths(const Paths &ppg, PolyType PolyTyp, bool Closed)
 void ClipperBase::Clear()
 {
   DisposeLocalMinimaList();
-  for (auto edges: m_edges) {
-    for (EdgeList::size_type i = 0; i < m_edges.size(); ++i) {
+  for (auto *edges: m_edges) {
       delete [] edges;
-    }
   }
   m_edges.clear();
   m_UseFullRange = false;
