@@ -140,10 +140,8 @@ struct LocMinSorter {
  * @return Rounded value
  */
 inline cInt Round(double val) {
-  if((val < 0))
-    return static_cast<cInt>(val - 0.5);
-  else
-    return static_cast<cInt>(val + 0.5);
+  val += val < 0 ? -0.5 : 0.5;
+  return static_cast<cInt>(val);
 }
 //------------------------------------------------------------------------------
 
@@ -241,7 +239,9 @@ bool PolyNode::IsOpen() const {
 #ifndef use_int32
 
 /**
- * @brief Int128 class (enables safe math on signed 64bit integers)
+ * @brief Int128 class
+ *
+ * enables safe math on signed 64bit integers
  * eg Int128 val1((long64)9223372036854775807); //ie 2^63 -1
  * Int128 val2((long64)9223372036854775807);
  * Int128 val3 = val1 * val2;
@@ -250,16 +250,10 @@ bool PolyNode::IsOpen() const {
  */
 class Int128 {
 public:
-  ulong64 lo;  //! low value
-  long64  hi;  //! high value
+  ulong64 lo;  //! unsigned value
+  long64  hi;  //! whether actual value is ±
 
-  Int128(long64 _lo = 0) {
-    lo = (ulong64)_lo;
-    if(_lo < 0)
-      hi = -1;
-    else
-      hi = 0;
-  }
+  Int128(long64 _lo = 0): lo(_lo), hi(_lo < 0 ? -1: 0) {}
 
   Int128(const Int128& val) : lo(val.lo), hi(val.hi) {}
 
@@ -267,10 +261,7 @@ public:
 
   Int128& operator=(const long64& val) {
     lo = (ulong64)val;
-    if(val < 0)
-      hi = -1;
-    else
-      hi = 0;
+    hi = val < 0 ? -1 : 0;
     return *this;
   }
 
@@ -430,7 +421,12 @@ bool PointIsVertex(const IntPoint& Pt, OutPt* pp) {
 }
 //------------------------------------------------------------------------------
 
-
+/**
+ * @brief Determine whether a point lies inside a polygon
+ * @param pt Point
+ * @param op Polygon
+ * @return 1 if true, 0 if false, -1 if on boundary
+ */
 int PointInPolygon(const IntPoint& pt, const Path& path) {
   // returns 0 if false, +1 if true, -1 if pt ON polygon boundary
   int    result = 0;
@@ -438,7 +434,9 @@ int PointInPolygon(const IntPoint& pt, const Path& path) {
   if(cnt < 3)
     return 0;
   IntPoint ip = path[0];
+  // loop over the points in the path
   for(size_t i = 1; i <= cnt; ++i) {
+    // the next point in the path
     IntPoint ipNext = (i == cnt ? path[0] : path[i]);
     if(ipNext.Y == pt.Y) {
       if((ipNext.X == pt.X) || (ip.Y == pt.Y && ((ipNext.X > pt.X) == (ip.X < pt.X))))
@@ -470,13 +468,6 @@ int PointInPolygon(const IntPoint& pt, const Path& path) {
   return result;
 }
 //------------------------------------------------------------------------------
-
-/**
- * @brief PointInPolygon
- * @param pt
- * @param op
- * @return
- */
 
 /**
  * @brief Determine whether a point lies inside a polygon
@@ -1863,7 +1854,7 @@ void Clipper::CopyAELToSEL() {
 }
 //------------------------------------------------------------------------------
 
-void Clipper::AddJoin(OutPt* op1, OutPt* op2, const IntPoint OffPt) {
+void Clipper::AddJoin(OutPt* op1, OutPt* op2, const IntPoint &OffPt) {
   auto j    = new Join;
   j->OutPt1 = op1;
   j->OutPt2 = op2;
