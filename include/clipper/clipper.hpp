@@ -295,27 +295,41 @@ private:
 class PolyTree : public PolyNode {
 public:
   ~PolyTree() { Clear(); };
+
+  /**
+   * @brief GetFirst Get the first child in the tre
+   * @return First child in tree, nullptr if no children
+   */
   PolyNode* GetFirst() const;
+
+  /**
+   * @brief Clear
+   */
   void      Clear();
+
+  /**
+   * @brief Total Get the total number of child nodes in the tree
+   * @return Number of childen
+   */
   int       Total() const;
 
 private:
   // PolyTree& operator =(PolyTree& other);
-  PolyNodes AllNodes;
-  friend class Clipper;  // to access AllNodes
+  PolyNodes AllNodes;   //! list of nodes
+  friend class Clipper; // to access AllNodes
 };
 
 /**
  * @brief Orientation
- * @param poly
- * @return
+ * @param poly Target polygon
+ * @return Whether the area of the specified polygon is positive
  */
 bool Orientation(const Path& poly);
 
 /**
- * @brief Area
- * @param poly
- * @return
+ * @brief Area Determine the area of a polygon
+ * @param poly Target polygon
+ * @return Area of polygon
  */
 double Area(const Path& poly);
 
@@ -451,8 +465,8 @@ public:
   virtual void Clear();
 
   /**
-   * @brief GetBounds
-   * @return
+   * @brief GetBounds Calculate an axis-aligned bounding box
+   * @return Bounding box
    */
   IntRect GetBounds();
 
@@ -552,9 +566,17 @@ private:
   bool    IsEvenOddFillType(const TEdge& edge) const;
   bool    IsEvenOddAltFillType(const TEdge& edge) const;
   void    InsertLocalMinimaIntoAEL(const cInt botY);
+  /**
+   * @brief InsertEdgeIntoAEL Insert edge into Active Edge List
+   * @param edge
+   * @param startEdge
+   */
   void    InsertEdgeIntoAEL(TEdge* edge, TEdge* startEdge);
   void    AddEdgeToSEL(TEdge* edge);
   bool    PopEdgeFromSEL(TEdge*& edge);
+  /**
+   * @brief CopyAELToSEL Copy Active Edge List to ...
+   */
   void    CopyAELToSEL();
   void    DeleteFromSEL(TEdge* e);
   void    SwapPositionsInSEL(TEdge* edge1, TEdge* edge2);

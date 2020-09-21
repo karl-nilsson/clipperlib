@@ -46,7 +46,10 @@ static double const pi                = 3.141592653589793238;
 static double const two_pi            = pi * 2;
 static double const def_arc_tolerance = 0.25;
 
-enum Direction { dRightToLeft, dLeftToRight };
+enum Direction {
+  dRightToLeft,
+  dLeftToRight
+};
 
 static int const Unassigned = -1;  // edge not currently 'owning' a solution
 static int const Skip       = -2;  // edge that would otherwise close a path
@@ -55,38 +58,50 @@ static int const Skip       = -2;  // edge that would otherwise close a path
 #define TOLERANCE (1.0e-20)
 #define NEAR_ZERO(val) (((val) > -TOLERANCE) && ((val) < TOLERANCE))
 
+/**
+ * @brief The TEdge struct
+ *
+ *
+ */
 struct TEdge {
-  IntPoint Bot;   // Bottom
-  IntPoint Curr;  // current (updated for every new scanbeam)
-  IntPoint Top;   // Top
+  IntPoint Bot;   //! Bottom
+  IntPoint Curr;  //! current (updated for every new scanbeam)
+  IntPoint Top;   //! Top
   double   Dx;
   PolyType PolyTyp;
-  EdgeSide Side;       // side only refers to current side of solution poly
-  int      WindDelta;  // 1 or -1 depending on winding direction
-  int      WindCnt;    // winding count
-  int      WindCnt2;   // winding count of the opposite polytype
-  int      OutIdx;     // out index
+  EdgeSide Side;       //! side only refers to current side of solution poly
+  int      WindDelta;  //! ±1 depending on winding direction
+  int      WindCnt;    //! winding count
+  int      WindCnt2;   //! winding count of the opposite polytype
+  int      OutIdx;     //! out index
   TEdge*   Next;
   TEdge*   Prev;
   TEdge*   NextInLML;
-  TEdge*   NextInAEL;
-  TEdge*   PrevInAEL;
-  TEdge*   NextInSEL;
-  TEdge*   PrevInSEL;
+  TEdge*   NextInAEL; //! Next edge in Active Edge List
+  TEdge*   PrevInAEL; //! Previous edge in Active Edge List
+  TEdge*   NextInSEL; //! Next edge in
+  TEdge*   PrevInSEL; //! Previous edge in
 };
 
+/**
+ * @brief The IntersectNode struct
+ */
 struct IntersectNode {
   TEdge*   Edge1;
   TEdge*   Edge2;
   IntPoint Pt;
 };
 
+/**
+ * @brief The LocalMinimum struct
+ */
 struct LocalMinimum {
   cInt   Y;
   TEdge* LeftBound;
   TEdge* RightBound;
 };
 
+// Forward declaration
 struct OutPt;
 
 /**
@@ -159,18 +174,16 @@ inline cInt Abs(cInt val) {
 //------------------------------------------------------------------------------
 
 void PolyTree::Clear() {
-  for(auto* i : AllNodes)
+  for(auto* i : AllNodes) {
     delete i;
+  }
   AllNodes.resize(0);
   Childs.resize(0);
 }
 //------------------------------------------------------------------------------
 
 PolyNode* PolyTree::GetFirst() const {
-  if(!Childs.empty())
-    return Childs[0];
-  else
-    return nullptr;
+  return Childs.empty() ? nullptr : Childs[0];
 }
 //------------------------------------------------------------------------------
 
@@ -380,8 +393,10 @@ bool Orientation(const Path& poly) {
 
 double Area(const Path& poly) {
   int size = (int)poly.size();
-  if(size < 3)
+  // No polygon has less than 3 sides
+  if(size < 3) {
     return 0;
+  }
 
   double a = 0;
   for(int i = 0, j = size - 1; i < size; ++i) {
