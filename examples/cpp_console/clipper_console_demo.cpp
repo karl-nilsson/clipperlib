@@ -50,7 +50,7 @@ class SVGBuilder
 
   StyleInfo()
   {
-    pft = pftNonZero;
+    pft = PolyFillType::NonZero;
     brushClr = 0xFFFFFFCC;
     penClr = 0xFF000000;
     penWidth = 0.8;
@@ -160,7 +160,7 @@ public:
       file << poly_end[0] << ColorToHtml(polyInfos[i].si.brushClr) <<
     poly_end[1] << GetAlphaAsFrac(polyInfos[i].si.brushClr) <<
         poly_end[2] <<
-        (polyInfos[i].si.pft == pftEvenOdd ? "evenodd" : "nonzero") <<
+        (polyInfos[i].si.pft == PolyFillType::EvenOdd ? "evenodd" : "nonzero") <<
         poly_end[3] << ColorToHtml(polyInfos[i].si.penClr) <<
     poly_end[4] << GetAlphaAsFrac(polyInfos[i].si.penClr) <<
         poly_end[5] << polyInfos[i].si.penWidth << poly_end[6];
@@ -320,9 +320,9 @@ int main(int argc, char* argv[])
       MakeRandomPoly(100, 400, 400, subject);
       MakeRandomPoly(100, 400, 400, clip);
       clpr.Clear();
-      clpr.AddPaths(subject, ptSubject, true);
-      clpr.AddPaths(clip, ptClip, true);
-      if (!clpr.Execute(ctIntersection, solution, pftEvenOdd, pftEvenOdd))
+      clpr.AddPaths(subject, PolyType::Subject, true);
+      clpr.AddPaths(clip, PolyType::Clip, true);
+      if (!clpr.Execute(ClipType::Intersection, solution, PolyFillType::EvenOdd, PolyFillType::EvenOdd))
         error_cnt++;
     }
     double time_elapsed = double(clock() - time_start)/CLOCKS_PER_SEC;
@@ -337,7 +337,7 @@ int main(int argc, char* argv[])
     //and see the final clipping op as an image too ...
     SVGBuilder svg;
     svg.style.penWidth = 0.8;
-    svg.style.pft = pftEvenOdd;
+    svg.style.pft = PolyFillType::EvenOdd;
     svg.style.brushClr = 0x1200009C;
     svg.style.penClr = 0xCCD3D3DA;
     svg.AddPaths(subject);
@@ -346,7 +346,7 @@ int main(int argc, char* argv[])
     svg.AddPaths(clip);
     svg.style.brushClr = 0x6080ff9C;
     svg.style.penClr = 0xFF003300;
-    svg.style.pft = pftNonZero;
+    svg.style.pft = PolyFillType::NonZero;
     svg.AddPaths(solution);
     svg.SaveToFile("solution.svg");
     return 0;
@@ -405,32 +405,32 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  ClipType clipType = ctIntersection;
+  ClipType clipType = ClipType::Intersection;
   const string sClipType[] = {"INTERSECTION", "UNION", "DIFFERENCE", "XOR"};
 
   if (argc > 3)
   {
-    if (ASCII_icompare(argv[3], "XOR")) clipType = ctXor;
-    else if (ASCII_icompare(argv[3], "UNION")) clipType = ctUnion;
-    else if (ASCII_icompare(argv[3], "DIFFERENCE")) clipType = ctDifference;
-    else clipType = ctIntersection;
+    if (ASCII_icompare(argv[3], "XOR")) clipType = ClipType::XOR;
+    else if (ASCII_icompare(argv[3], "UNION")) clipType = ClipType::Union;
+    else if (ASCII_icompare(argv[3], "DIFFERENCE")) clipType = ClipType::Difference;
+    else clipType = ClipType::Intersection;
   }
 
-  PolyFillType subj_pft = pftNonZero, clip_pft = pftNonZero;
+  PolyFillType subj_pft = PolyFillType::NonZero, clip_pft = PolyFillType::NonZero;
   if (argc > 5)
   {
-    if (ASCII_icompare(argv[4], "EVENODD")) subj_pft = pftEvenOdd;
-    if (ASCII_icompare(argv[5], "EVENODD")) clip_pft = pftEvenOdd;
+    if (ASCII_icompare(argv[4], "EVENODD")) subj_pft = PolyFillType::EvenOdd;
+    if (ASCII_icompare(argv[5], "EVENODD")) clip_pft = PolyFillType::EvenOdd;
   }
 
   Clipper c;
-  c.AddPaths(subject, ptSubject, true);
-  c.AddPaths(clip, ptClip, true);
+  c.AddPaths(subject, PolyType::Subject, true);
+  c.AddPaths(clip, PolyType::Clip, true);
   Paths solution;
 
   if (!c.Execute(clipType, solution, subj_pft, clip_pft)) 
   {
-    cout << (sClipType[clipType] + " failed!\n\n");
+    cout << (sClipType[static_cast<int>(clipType)] + " failed!\n\n");
     return 1;
   }
 
@@ -450,7 +450,7 @@ int main(int argc, char* argv[])
   svg.AddPaths(clip);
   svg.style.brushClr = 0x6080ff9C;
   svg.style.penClr = 0xFF003300;
-  svg.style.pft = pftNonZero;
+  svg.style.pft = PolyFillType::NonZero;
   svg.AddPaths(solution);
   svg.SaveToFile("solution.svg", svg_scale);
 

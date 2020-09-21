@@ -46,9 +46,9 @@ static double const pi                = 3.141592653589793238;
 static double const two_pi            = pi * 2;
 static double const def_arc_tolerance = 0.25;
 
-enum Direction {
-  dRightToLeft,
-  dLeftToRight
+enum class Direction {
+  RightToLeft,
+  LeftToRight
 };
 
 static int const Unassigned = -1;  // edge not currently 'owning' a solution
@@ -1020,7 +1020,7 @@ TEdge* ClipperBase::ProcessBound(TEdge* E, bool NextIsForward) {
 
 bool ClipperBase::AddPath(const Path& pg, PolyType PolyTyp, bool Closed) {
 #ifdef use_lines
-  if(!Closed && PolyTyp == ptClip)
+  if(!Closed && PolyTyp == PolyType::Clip)
     throw clipperException("AddPath: Open paths must be subject.");
 #else
   if(!Closed)
@@ -1594,13 +1594,13 @@ void Clipper::SetWindingCount(TEdge& edge) {
     e = e->PrevInAEL;
   if(!e) {
     if(edge.WindDelta == 0) {
-      PolyFillType pft = (edge.PolyTyp == ptSubject ? m_SubjFillType : m_ClipFillType);
-      edge.WindCnt     = (pft == pftNegative ? -1 : 1);
+      PolyFillType pft = (edge.PolyTyp == PolyType::Subject ? m_SubjFillType : m_ClipFillType);
+      edge.WindCnt     = (pft == PolyFillType::Negative ? -1 : 1);
     } else
       edge.WindCnt = edge.WindDelta;
     edge.WindCnt2 = 0;
     e             = m_ActiveEdges;  // ie get ready to calc WindCnt2
-  } else if(edge.WindDelta == 0 && m_ClipType != ctUnion) {
+  } else if(edge.WindDelta == 0 && m_ClipType != ClipType::Union) {
     edge.WindCnt  = 1;
     edge.WindCnt2 = e->WindCnt2;
     e             = e->NextInAEL;  // ie get ready to calc WindCnt2
@@ -1672,24 +1672,24 @@ void Clipper::SetWindingCount(TEdge& edge) {
 //------------------------------------------------------------------------------
 
 bool Clipper::IsEvenOddFillType(const TEdge& edge) const {
-  if(edge.PolyTyp == ptSubject)
-    return m_SubjFillType == pftEvenOdd;
+  if(edge.PolyTyp == PolyType::Subject)
+    return m_SubjFillType == PolyFillType::EvenOdd;
   else
-    return m_ClipFillType == pftEvenOdd;
+    return m_ClipFillType == PolyFillType::EvenOdd;
 }
 //------------------------------------------------------------------------------
 
 bool Clipper::IsEvenOddAltFillType(const TEdge& edge) const {
-  if(edge.PolyTyp == ptSubject)
-    return m_ClipFillType == pftEvenOdd;
+  if(edge.PolyTyp == PolyType::Subject)
+    return m_ClipFillType == PolyFillType::EvenOdd;
   else
-    return m_SubjFillType == pftEvenOdd;
+    return m_SubjFillType == PolyFillType::EvenOdd;
 }
 //------------------------------------------------------------------------------
 
 bool Clipper::IsContributing(const TEdge& edge) const {
   PolyFillType pft, pft2;
-  if(edge.PolyTyp == ptSubject) {
+  if(edge.PolyTyp == PolyType::Subject) {
     pft  = m_SubjFillType;
     pft2 = m_ClipFillType;
   } else {
@@ -1698,76 +1698,76 @@ bool Clipper::IsContributing(const TEdge& edge) const {
   }
 
   switch(pft) {
-    case pftEvenOdd:
+    case PolyFillType::EvenOdd:
       // return false if a subj line has been flagged as inside a subj polygon
       if(edge.WindDelta == 0 && edge.WindCnt != 1)
         return false;
       break;
-    case pftNonZero:
+    case PolyFillType::NonZero:
       if(Abs(edge.WindCnt) != 1)
         return false;
       break;
-    case pftPositive:
+    case PolyFillType::Positive:
       if(edge.WindCnt != 1)
         return false;
       break;
-    default:  // pftNegative
+    default:  // PolyFillType::Negative
       if(edge.WindCnt != -1)
         return false;
   }
 
   switch(m_ClipType) {
-    case ctIntersection:
+    case ClipType::Intersection:
       switch(pft2) {
-        case pftEvenOdd:
-        case pftNonZero:
+        case PolyFillType::EvenOdd:
+        case PolyFillType::NonZero:
           return (edge.WindCnt2 != 0);
-        case pftPositive:
+        case PolyFillType::Positive:
           return (edge.WindCnt2 > 0);
         default:
           return (edge.WindCnt2 < 0);
       }
       break;
-    case ctUnion:
+    case ClipType::Union:
       switch(pft2) {
-        case pftEvenOdd:
-        case pftNonZero:
+        case PolyFillType::EvenOdd:
+        case PolyFillType::NonZero:
           return (edge.WindCnt2 == 0);
-        case pftPositive:
+        case PolyFillType::Positive:
           return (edge.WindCnt2 <= 0);
         default:
           return (edge.WindCnt2 >= 0);
       }
       break;
-    case ctDifference:
-      if(edge.PolyTyp == ptSubject)
+    case ClipType::Difference:
+      if(edge.PolyTyp == PolyType::Subject)
         switch(pft2) {
-          case pftEvenOdd:
-          case pftNonZero:
+          case PolyFillType::EvenOdd:
+          case PolyFillType::NonZero:
             return (edge.WindCnt2 == 0);
-          case pftPositive:
+          case PolyFillType::Positive:
             return (edge.WindCnt2 <= 0);
           default:
             return (edge.WindCnt2 >= 0);
         }
       else
         switch(pft2) {
-          case pftEvenOdd:
-          case pftNonZero:
+          case PolyFillType::EvenOdd:
+          case PolyFillType::NonZero:
             return (edge.WindCnt2 != 0);
-          case pftPositive:
+          case PolyFillType::Positive:
             return (edge.WindCnt2 > 0);
           default:
             return (edge.WindCnt2 < 0);
         }
       break;
-    case ctXor:
+    case ClipType::XOR:
       if(edge.WindDelta == 0)  // XOr always contributing unless open
         switch(pft2) {
-          case pftEvenOdd:
-          case pftNonZero:
+          case PolyFillType::EvenOdd:
+          case PolyFillType::NonZero:
             return (edge.WindCnt2 == 0);
-          case pftPositive:
+          case PolyFillType::Positive:
             return (edge.WindCnt2 <= 0);
           default:
             return (edge.WindCnt2 >= 0);
@@ -2031,7 +2031,7 @@ void Clipper::IntersectEdges(TEdge* e1, TEdge* e2, IntPoint& Pt) {
       return;
 
     // if intersecting a subj line with a subj poly ...
-    else if(e1->PolyTyp == e2->PolyTyp && e1->WindDelta != e2->WindDelta && m_ClipType == ctUnion) {
+    else if(e1->PolyTyp == e2->PolyTyp && e1->WindDelta != e2->WindDelta && m_ClipType == ClipType::Union) {
       if(e1->WindDelta == 0) {
         if(e2Contributing) {
           AddOutPt(e1, Pt);
@@ -2047,11 +2047,11 @@ void Clipper::IntersectEdges(TEdge* e1, TEdge* e2, IntPoint& Pt) {
       }
     } else if(e1->PolyTyp != e2->PolyTyp) {
       // toggle subj open path OutIdx on/off when Abs(clip.WndCnt) == 1 ...
-      if((e1->WindDelta == 0) && abs(e2->WindCnt) == 1 && (m_ClipType != ctUnion || e2->WindCnt2 == 0)) {
+      if((e1->WindDelta == 0) && abs(e2->WindCnt) == 1 && (m_ClipType != ClipType::Union || e2->WindCnt2 == 0)) {
         AddOutPt(e1, Pt);
         if(e1Contributing)
           e1->OutIdx = Unassigned;
-      } else if((e2->WindDelta == 0) && (abs(e1->WindCnt) == 1) && (m_ClipType != ctUnion || e1->WindCnt2 == 0)) {
+      } else if((e2->WindDelta == 0) && (abs(e1->WindCnt) == 1) && (m_ClipType != ClipType::Union || e1->WindCnt2 == 0)) {
         AddOutPt(e2, Pt);
         if(e2Contributing)
           e2->OutIdx = Unassigned;
@@ -2090,14 +2090,14 @@ void Clipper::IntersectEdges(TEdge* e1, TEdge* e2, IntPoint& Pt) {
   }
 
   PolyFillType e1FillType, e2FillType, e1FillType2, e2FillType2;
-  if(e1->PolyTyp == ptSubject) {
+  if(e1->PolyTyp == PolyType::Subject) {
     e1FillType  = m_SubjFillType;
     e1FillType2 = m_ClipFillType;
   } else {
     e1FillType  = m_ClipFillType;
     e1FillType2 = m_SubjFillType;
   }
-  if(e2->PolyTyp == ptSubject) {
+  if(e2->PolyTyp == PolyType::Subject) {
     e2FillType  = m_SubjFillType;
     e2FillType2 = m_ClipFillType;
   } else {
@@ -2107,20 +2107,20 @@ void Clipper::IntersectEdges(TEdge* e1, TEdge* e2, IntPoint& Pt) {
 
   cInt e1Wc, e2Wc;
   switch(e1FillType) {
-    case pftPositive:
+    case PolyFillType::Positive:
       e1Wc = e1->WindCnt;
       break;
-    case pftNegative:
+    case PolyFillType::Negative:
       e1Wc = -e1->WindCnt;
       break;
     default:
       e1Wc = Abs(e1->WindCnt);
   }
   switch(e2FillType) {
-    case pftPositive:
+    case PolyFillType::Positive:
       e2Wc = e2->WindCnt;
       break;
-    case pftNegative:
+    case PolyFillType::Negative:
       e2Wc = -e2->WindCnt;
       break;
     default:
@@ -2128,7 +2128,7 @@ void Clipper::IntersectEdges(TEdge* e1, TEdge* e2, IntPoint& Pt) {
   }
 
   if(e1Contributing && e2Contributing) {
-    if((e1Wc != 0 && e1Wc != 1) || (e2Wc != 0 && e2Wc != 1) || (e1->PolyTyp != e2->PolyTyp && m_ClipType != ctXor)) {
+    if((e1Wc != 0 && e1Wc != 1) || (e2Wc != 0 && e2Wc != 1) || (e1->PolyTyp != e2->PolyTyp && m_ClipType != ClipType::XOR)) {
       AddLocalMaxPoly(e1, e2, Pt);
     } else {
       AddOutPt(e1, Pt);
@@ -2153,20 +2153,20 @@ void Clipper::IntersectEdges(TEdge* e1, TEdge* e2, IntPoint& Pt) {
 
     cInt e1Wc2, e2Wc2;
     switch(e1FillType2) {
-      case pftPositive:
+      case PolyFillType::Positive:
         e1Wc2 = e1->WindCnt2;
         break;
-      case pftNegative:
+      case PolyFillType::Negative:
         e1Wc2 = -e1->WindCnt2;
         break;
       default:
         e1Wc2 = Abs(e1->WindCnt2);
     }
     switch(e2FillType2) {
-      case pftPositive:
+      case PolyFillType::Positive:
         e2Wc2 = e2->WindCnt2;
         break;
-      case pftNegative:
+      case PolyFillType::Negative:
         e2Wc2 = -e2->WindCnt2;
         break;
       default:
@@ -2177,19 +2177,19 @@ void Clipper::IntersectEdges(TEdge* e1, TEdge* e2, IntPoint& Pt) {
       AddLocalMinPoly(e1, e2, Pt);
     } else if(e1Wc == 1 && e2Wc == 1)
       switch(m_ClipType) {
-        case ctIntersection:
+        case ClipType::Intersection:
           if(e1Wc2 > 0 && e2Wc2 > 0)
             AddLocalMinPoly(e1, e2, Pt);
           break;
-        case ctUnion:
+        case ClipType::Union:
           if(e1Wc2 <= 0 && e2Wc2 <= 0)
             AddLocalMinPoly(e1, e2, Pt);
           break;
-        case ctDifference:
-          if(((e1->PolyTyp == ptClip) && (e1Wc2 > 0) && (e2Wc2 > 0)) || ((e1->PolyTyp == ptSubject) && (e1Wc2 <= 0) && (e2Wc2 <= 0)))
+        case ClipType::Difference:
+          if(((e1->PolyTyp == PolyType::Clip) && (e1Wc2 > 0) && (e2Wc2 > 0)) || ((e1->PolyTyp == PolyType::Subject) && (e1Wc2 <= 0) && (e2Wc2 <= 0)))
             AddLocalMinPoly(e1, e2, Pt);
           break;
-        case ctXor:
+        case ClipType::XOR:
           AddLocalMinPoly(e1, e2, Pt);
       }
     else
@@ -2493,7 +2493,7 @@ void Clipper::SwapPositionsInSEL(TEdge* Edge1, TEdge* Edge2) {
 //------------------------------------------------------------------------------
 
 TEdge* GetNextInAEL(TEdge* e, Direction dir) {
-  return dir == dLeftToRight ? e->NextInAEL : e->PrevInAEL;
+  return dir == Direction::LeftToRight ? e->NextInAEL : e->PrevInAEL;
 }
 //------------------------------------------------------------------------------
 
@@ -2501,11 +2501,11 @@ void GetHorzDirection(const TEdge& HorzEdge, Direction& Dir, cInt& Left, cInt& R
   if(HorzEdge.Bot.X < HorzEdge.Top.X) {
     Left  = HorzEdge.Bot.X;
     Right = HorzEdge.Top.X;
-    Dir   = dLeftToRight;
+    Dir   = Direction::LeftToRight;
   } else {
     Left  = HorzEdge.Top.X;
     Right = HorzEdge.Bot.X;
-    Dir   = dRightToLeft;
+    Dir   = Direction::RightToLeft;
   }
 }
 //------------------------------------------------------------------------
@@ -2537,7 +2537,7 @@ void Clipper::ProcessHorizontal(TEdge* horzEdge) {
   MaximaList::const_reverse_iterator maxRit;
   if(m_Maxima.size() > 0) {
     // get the first maxima in range (X) ...
-    if(dir == dLeftToRight) {
+    if(dir == Direction::LeftToRight) {
       maxIt = m_Maxima.begin();
       while(maxIt != m_Maxima.end() && *maxIt <= horzEdge->Bot.X)
         maxIt++;
@@ -2563,7 +2563,7 @@ void Clipper::ProcessHorizontal(TEdge* horzEdge) {
       // polygons) wherever maxima touch these horizontal edges. This helps
       //'simplifying' polygons (ie if the Simplify property is set).
       if(m_Maxima.size() > 0) {
-        if(dir == dLeftToRight) {
+        if(dir == Direction::LeftToRight) {
           while(maxIt != m_Maxima.end() && *maxIt < e->Curr.X) {
             if(horzEdge->OutIdx >= 0 && !IsOpen)
               AddOutPt(horzEdge, IntPoint(*maxIt, horzEdge->Bot.Y));
@@ -2578,7 +2578,7 @@ void Clipper::ProcessHorizontal(TEdge* horzEdge) {
         }
       };
 
-      if((dir == dLeftToRight && e->Curr.X > horzRight) || (dir == dRightToLeft && e->Curr.X < horzLeft))
+      if((dir == Direction::LeftToRight && e->Curr.X > horzRight) || (dir == Direction::RightToLeft && e->Curr.X < horzLeft))
         break;
 
       // Also break if we've got to the end of an intermediate horizontal edge ...
@@ -2589,7 +2589,7 @@ void Clipper::ProcessHorizontal(TEdge* horzEdge) {
       if(horzEdge->OutIdx >= 0 && !IsOpen)  // note: may be done multiple times
       {
 #ifdef use_xyz
-        if(dir == dLeftToRight)
+        if(dir == Direction::LeftToRight)
           SetZ(e->Curr, *horzEdge, *e);
         else
           SetZ(e->Curr, *e, *horzEdge);
@@ -2616,7 +2616,7 @@ void Clipper::ProcessHorizontal(TEdge* horzEdge) {
         return;
       }
 
-      if(dir == dLeftToRight) {
+      if(dir == Direction::LeftToRight) {
         IntPoint Pt = IntPoint(e->Curr.X, horzEdge->Curr.Y);
         IntersectEdges(horzEdge, e, Pt);
       } else {
@@ -3162,8 +3162,8 @@ OutPt* DupOutPt(OutPt* outPt, bool InsertAfter) {
 //------------------------------------------------------------------------------
 
 bool JoinHorz(OutPt* op1, OutPt* op1b, OutPt* op2, OutPt* op2b, const IntPoint Pt, bool DiscardLeft) {
-  Direction Dir1 = (op1->Pt.X > op1b->Pt.X ? dRightToLeft : dLeftToRight);
-  Direction Dir2 = (op2->Pt.X > op2b->Pt.X ? dRightToLeft : dLeftToRight);
+  Direction Dir1 = (op1->Pt.X > op1b->Pt.X ? Direction::RightToLeft : Direction::LeftToRight);
+  Direction Dir2 = (op2->Pt.X > op2b->Pt.X ? Direction::RightToLeft : Direction::LeftToRight);
   if(Dir1 == Dir2)
     return false;
 
@@ -3172,7 +3172,7 @@ bool JoinHorz(OutPt* op1, OutPt* op1b, OutPt* op2, OutPt* op2b, const IntPoint P
   // So, to facilitate this while inserting Op1b and Op2b ...
   // when DiscardLeft, make sure we're AT or RIGHT of Pt before adding Op1b,
   // otherwise make sure we're AT or LEFT of Pt. (Likewise with Op2b.)
-  if(Dir1 == dLeftToRight) {
+  if(Dir1 == Direction::LeftToRight) {
     while(op1->Next->Pt.X <= Pt.X && op1->Next->Pt.X >= op1->Pt.X && op1->Next->Pt.Y == Pt.Y)
       op1 = op1->Next;
     if(DiscardLeft && (op1->Pt.X != Pt.X))
@@ -3196,7 +3196,7 @@ bool JoinHorz(OutPt* op1, OutPt* op1b, OutPt* op2, OutPt* op2b, const IntPoint P
     }
   }
 
-  if(Dir2 == dLeftToRight) {
+  if(Dir2 == Direction::LeftToRight) {
     while(op2->Next->Pt.X <= Pt.X && op2->Next->Pt.X >= op2->Pt.X && op2->Next->Pt.Y == Pt.Y)
       op2 = op2->Next;
     if(DiscardLeft && (op2->Pt.X != Pt.X))
@@ -3220,7 +3220,7 @@ bool JoinHorz(OutPt* op1, OutPt* op1b, OutPt* op2, OutPt* op2b, const IntPoint P
     };
   };
 
-  if((Dir1 == dLeftToRight) == DiscardLeft) {
+  if((Dir1 == Direction::LeftToRight) == DiscardLeft) {
     op1->Prev  = op2;
     op2->Next  = op1;
     op1b->Next = op2b;
@@ -3634,9 +3634,9 @@ void ClipperOffset::Execute(Paths& solution, double delta) {
 
   // now clean up 'corners' ...
   Clipper clpr;
-  clpr.AddPaths(m_destPolys, ptSubject, true);
+  clpr.AddPaths(m_destPolys, PolyType::Subject, true);
   if(delta > 0) {
-    clpr.Execute(ctUnion, solution, pftPositive, pftPositive);
+    clpr.Execute(ClipType::Union, solution, PolyFillType::Positive, PolyFillType::Positive);
   } else {
     IntRect r = clpr.GetBounds();
     Path    outer(4);
@@ -3645,9 +3645,9 @@ void ClipperOffset::Execute(Paths& solution, double delta) {
     outer[2] = IntPoint(r.right + 10, r.top - 10);
     outer[3] = IntPoint(r.left - 10, r.top - 10);
 
-    clpr.AddPath(outer, ptSubject, true);
+    clpr.AddPath(outer, PolyType::Subject, true);
     clpr.ReverseSolution(true);
-    clpr.Execute(ctUnion, solution, pftNegative, pftNegative);
+    clpr.Execute(ClipType::Union, solution, PolyFillType::Negative, PolyFillType::Negative);
     if(solution.size() > 0)
       solution.erase(solution.begin());
   }
@@ -3661,9 +3661,9 @@ void ClipperOffset::Execute(PolyTree& solution, double delta) {
 
   // now clean up 'corners' ...
   Clipper clpr;
-  clpr.AddPaths(m_destPolys, ptSubject, true);
+  clpr.AddPaths(m_destPolys, PolyType::Subject, true);
   if(delta > 0) {
-    clpr.Execute(ctUnion, solution, pftPositive, pftPositive);
+    clpr.Execute(ClipType::Union, solution, PolyFillType::Positive, PolyFillType::Positive);
   } else {
     IntRect r = clpr.GetBounds();
     Path    outer(4);
@@ -3672,9 +3672,9 @@ void ClipperOffset::Execute(PolyTree& solution, double delta) {
     outer[2] = IntPoint(r.right + 10, r.top - 10);
     outer[3] = IntPoint(r.left - 10, r.top - 10);
 
-    clpr.AddPath(outer, ptSubject, true);
+    clpr.AddPath(outer, PolyType::Subject, true);
     clpr.ReverseSolution(true);
-    clpr.Execute(ctUnion, solution, pftNegative, pftNegative);
+    clpr.Execute(ClipType::Union, solution, PolyFillType::Negative, PolyFillType::Negative);
     // remove the outer PolyNode rectangle ...
     if(solution.ChildCount() == 1 && solution.Childs[0]->ChildCount() > 0) {
       PolyNode* outerNode = solution.Childs[0];
@@ -3986,16 +3986,16 @@ void ReversePaths(Paths& p) {
 void SimplifyPolygon(const Path& in_poly, Paths& out_polys, PolyFillType fillType) {
   Clipper c;
   c.StrictlySimple(true);
-  c.AddPath(in_poly, ptSubject, true);
-  c.Execute(ctUnion, out_polys, fillType, fillType);
+  c.AddPath(in_poly, PolyType::Subject, true);
+  c.Execute(ClipType::Union, out_polys, fillType, fillType);
 }
 //------------------------------------------------------------------------------
 
 void SimplifyPolygons(const Paths& in_polys, Paths& out_polys, PolyFillType fillType) {
   Clipper c;
   c.StrictlySimple(true);
-  c.AddPaths(in_polys, ptSubject, true);
-  c.Execute(ctUnion, out_polys, fillType, fillType);
+  c.AddPaths(in_polys, PolyType::Subject, true);
+  c.Execute(ClipType::Union, out_polys, fillType, fillType);
 }
 //------------------------------------------------------------------------------
 
@@ -4173,8 +4173,8 @@ void Minkowski(const Path& poly, const Path& path, Paths& solution, bool isSum, 
 void MinkowskiSum(const Path& pattern, const Path& path, Paths& solution, bool pathIsClosed) {
   Minkowski(pattern, path, solution, true, pathIsClosed);
   Clipper c;
-  c.AddPaths(solution, ptSubject, true);
-  c.Execute(ctUnion, solution, pftNonZero, pftNonZero);
+  c.AddPaths(solution, PolyType::Subject, true);
+  c.Execute(ClipType::Union, solution, PolyFillType::NonZero, PolyFillType::NonZero);
 }
 //------------------------------------------------------------------------------
 
@@ -4191,32 +4191,36 @@ void MinkowskiSum(const Path& pattern, const Paths& paths, Paths& solution, bool
   for(const auto& path : paths) {
     Paths tmp;
     Minkowski(pattern, path, tmp, true, pathIsClosed);
-    c.AddPaths(tmp, ptSubject, true);
+    c.AddPaths(tmp, PolyType::Subject, true);
     if(pathIsClosed) {
       Path tmp2;
       TranslatePath(path, tmp2, pattern[0]);
-      c.AddPath(tmp2, ptClip, true);
+      c.AddPath(tmp2, PolyType::Clip, true);
     }
   }
-  c.Execute(ctUnion, solution, pftNonZero, pftNonZero);
+  c.Execute(ClipType::Union, solution, PolyFillType::NonZero, PolyFillType::NonZero);
 }
 //------------------------------------------------------------------------------
 
 void MinkowskiDiff(const Path& poly1, const Path& poly2, Paths& solution) {
   Minkowski(poly1, poly2, solution, false, true);
   Clipper c;
-  c.AddPaths(solution, ptSubject, true);
-  c.Execute(ctUnion, solution, pftNonZero, pftNonZero);
+  c.AddPaths(solution, PolyType::Subject, true);
+  c.Execute(ClipType::Union, solution, PolyFillType::NonZero, PolyFillType::NonZero);
 }
 //------------------------------------------------------------------------------
 
-enum NodeType { ntAny, ntOpen, ntClosed };
+enum class NodeType {
+  Any,
+  Open,
+  Closed
+};
 
 void AddPolyNodeToPaths(const PolyNode& polynode, NodeType nodetype, Paths& paths) {
   bool match = true;
-  if(nodetype == ntClosed)
+  if(nodetype == NodeType::Closed)
     match = !polynode.IsOpen();
-  else if(nodetype == ntOpen)
+  else if(nodetype == NodeType::Open)
     return;
 
   if(!polynode.Contour.empty() && match)
@@ -4229,14 +4233,14 @@ void AddPolyNodeToPaths(const PolyNode& polynode, NodeType nodetype, Paths& path
 void PolyTreeToPaths(const PolyTree& polytree, Paths& paths) {
   paths.resize(0);
   paths.reserve(polytree.Total());
-  AddPolyNodeToPaths(polytree, ntAny, paths);
+  AddPolyNodeToPaths(polytree, NodeType::Any, paths);
 }
 //------------------------------------------------------------------------------
 
 void ClosedPathsFromPolyTree(const PolyTree& polytree, Paths& paths) {
   paths.resize(0);
   paths.reserve(polytree.Total());
-  AddPolyNodeToPaths(polytree, ntClosed, paths);
+  AddPolyNodeToPaths(polytree, NodeType::Closed, paths);
 }
 //------------------------------------------------------------------------------
 

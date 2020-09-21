@@ -72,19 +72,19 @@ namespace ClipperLib {
 /**
  * @brief ClipType enum, boolean operations
  */
-enum ClipType {
-  ctIntersection,  //! Intersection
-  ctUnion,         //! Union
-  ctDifference,    //! Difference
-  ctXor            //! Xor (exclusive or)
+enum class ClipType {
+  Intersection,  //! Intersection
+  Union,         //! Union
+  Difference,    //! Difference
+  XOR            //! Xor (exclusive or)
 };
 
 /**
  * @brief The PolyType enum
  */
-enum PolyType {
-  ptSubject,  //! TODO: document
-  ptClip      //! TODO: document
+enum class PolyType {
+  Subject,  //! TODO: document
+  Clip      //! TODO: document
 };
 
 /**
@@ -95,11 +95,11 @@ enum PolyType {
  * Others rules include Positive, Negative and ABS_GTR_EQ_TWO (only in OpenGL)
  * see http://glprogramming.com/red/chapter11.html
  */
-enum PolyFillType {
-  pftEvenOdd,   //!
-  pftNonZero,   //!
-  pftPositive,  //!
-  pftNegative   //!
+enum class PolyFillType {
+  EvenOdd,   //!
+  NonZero,   //!
+  Positive,  //!
+  Negative   //!
 };
 
 #ifdef use_int32
@@ -236,8 +236,17 @@ enum class JoinType {
 
 /**
  * @brief The EndType enum
+ *
+ * TODO: include graphics
+ * http://www.angusj.com/delphi/clipper/documentation/Docs/Units/ClipperLib/Types/EndType.htm
  */
-enum class EndType { ClosedPolygon, ClosedLine, OpenButt, OpenSquare, OpenRound };
+enum class EndType {
+  ClosedPolygon,  //!
+  ClosedLine,     //!
+  OpenButt,       //!
+  OpenSquare,     //!
+  OpenRound       //!
+};
 
 // forward declaration
 class PolyNode;
@@ -352,7 +361,7 @@ int PointInPolygon(const IntPoint& pt, const Path& path);
  * @param out_polys
  * @param fillType
  */
-void SimplifyPolygon(const Path& in_poly, Paths& out_polys, PolyFillType fillType = pftEvenOdd);
+void SimplifyPolygon(const Path& in_poly, Paths& out_polys, PolyFillType fillType = PolyFillType::EvenOdd);
 
 /**
  * @brief SimplifyPolygons
@@ -360,14 +369,14 @@ void SimplifyPolygon(const Path& in_poly, Paths& out_polys, PolyFillType fillTyp
  * @param out_polys
  * @param fillType
  */
-void SimplifyPolygons(const Paths& in_polys, Paths& out_polys, PolyFillType fillType = pftEvenOdd);
+void SimplifyPolygons(const Paths& in_polys, Paths& out_polys, PolyFillType fillType = PolyFillType::EvenOdd);
 
 /**
  * @brief SimplifyPolygons
  * @param polys
  * @param fillType
  */
-void SimplifyPolygons(Paths& polys, PolyFillType fillType = pftEvenOdd);
+void SimplifyPolygons(Paths& polys, PolyFillType fillType = PolyFillType::EvenOdd);
 
 /**
  * @brief CleanPolygon
@@ -524,9 +533,9 @@ protected:
 class Clipper : public virtual ClipperBase {
 public:
   Clipper(bool ReverseOutput = false, bool StrictSimple = false, bool PreserveCollinear = false);
-  bool Execute(ClipType clipType, Paths& solution, PolyFillType fillType = pftEvenOdd);
+  bool Execute(ClipType clipType, Paths& solution, PolyFillType fillType = PolyFillType::EvenOdd);
   bool Execute(ClipType clipType, Paths& solution, PolyFillType subjFillType, PolyFillType clipFillType);
-  bool Execute(ClipType clipType, PolyTree& polytree, PolyFillType fillType = pftEvenOdd);
+  bool Execute(ClipType clipType, PolyTree& polytree, PolyFillType fillType = PolyFillType::EvenOdd);
   bool Execute(ClipType clipType, PolyTree& polytree, PolyFillType subjFillType, PolyFillType clipFillType);
   bool ReverseSolution() { return m_ReverseOutput; };
   void ReverseSolution(bool value) { m_ReverseOutput = value; };
