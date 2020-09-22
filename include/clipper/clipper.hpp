@@ -261,11 +261,15 @@ typedef std::vector<PolyNode*> PolyNodes;
  */
 class PolyNode {
 public:
-  PolyNode();
+  PolyNode() = default;
   virtual ~PolyNode(){}
+  //! polygon
   Path      Contour;
+  //! Child nodes
   PolyNodes Childs;
-  PolyNode* Parent;
+  //! Parent node
+  PolyNode* Parent{nullptr};
+
   /**
    * @brief GetNext Get the next child or sibling
    * @return First child, if exists. Otherwise, next sibling
@@ -273,24 +277,40 @@ public:
   PolyNode* GetNext() const;
 
   /**
-   * @brief IsHole
+   * @brief IsHole Does polygon exist entirely within another polygon? TODO: rephrase
    * @return
    */
   bool IsHole() const;
-  bool IsOpen() const;
-  int  ChildCount() const;
+
+  /**
+   * @brief IsOpen
+   * @return
+   */
+  bool IsOpen() const {return m_IsOpen;}
+
+  /**
+   * @brief ChildCount Get the number of child nodes
+   * @return Number of child nodes
+   */
+  int  ChildCount() const {return (int)Childs.size();}
 
 private:
   // PolyNode& operator =(PolyNode& other);
-  unsigned Index;       //! node index in Parent.Childs
-  bool     m_IsOpen;    //!
-  JoinType m_jointype;  //!
-  EndType  m_endtype;
+  unsigned Index{0};        //! node index in Parent.Childs
+  bool     m_IsOpen{false}; //!
+  JoinType m_jointype;      //!
+  EndType  m_endtype;       //!
+
   /**
    * @brief GetNextSiblingUp
    * @return
    */
   PolyNode* GetNextSiblingUp() const;
+
+  /**
+   * @brief AddChild Add child node
+   * @param child
+   */
   void      AddChild(PolyNode& child);
   friend class Clipper;  // to access Index
   friend class ClipperOffset;
@@ -431,6 +451,8 @@ struct Join;
 typedef std::vector<OutRec*> PolyOutList;
 //! @typedef Vector of edges
 typedef std::vector<TEdge*> EdgeList;
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //! @typedef vector of joins
 typedef std::vector<Join*> JoinList;
 //! @typedef vector of lists of intersections
@@ -499,7 +521,7 @@ protected:
    * @brief Reset Reset class
    */
   virtual void Reset();
-  TEdge*       ProcessBound(TEdge* E, bool IsClockwise);
+  TEdge*       ProcessBound(TEdge* E, bool NextIsForward);
   void         InsertScanbeam(const cInt Y);
   bool         PopScanbeam(cInt& Y);
   bool         LocalMinimaPending();

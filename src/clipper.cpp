@@ -42,17 +42,26 @@
 #include <vector>
 
 namespace ClipperLib {
+
+//! π TODO: <numbers>
 static double const pi                = 3.141592653589793238;
+//! 2 * π
 static double const two_pi            = pi * 2;
+//! Arc Tolerance
 static double const def_arc_tolerance = 0.25;
 
+/**
+ * @brief The Direction enum
+ */
 enum class Direction {
-  RightToLeft,
-  LeftToRight
+  RightToLeft, //!
+  LeftToRight  //!
 };
 
-static int const Unassigned = -1;  // edge not currently 'owning' a solution
-static int const Skip       = -2;  // edge that would otherwise close a path
+//! edge not currently 'owning' a solution
+static int const Unassigned = -1;
+//! edge that would otherwise close a path
+static int const Skip       = -2;
 
 #define HORIZONTAL (-1.0E+40)
 #define TOLERANCE (1.0e-20)
@@ -64,32 +73,32 @@ static int const Skip       = -2;  // edge that would otherwise close a path
  *
  */
 struct TEdge {
-  IntPoint Bot;   //! Bottom
-  IntPoint Curr;  //! current (updated for every new scanbeam)
-  IntPoint Top;   //! Top
-  double   Dx;
-  PolyType PolyTyp;
-  EdgeSide Side;       //! side only refers to current side of solution poly
-  int      WindDelta;  //! ±1 depending on winding direction
-  int      WindCnt;    //! winding count
-  int      WindCnt2;   //! winding count of the opposite polytype
-  int      OutIdx;     //! out index
-  TEdge*   Next;
-  TEdge*   Prev;
-  TEdge*   NextInLML;
-  TEdge*   NextInAEL; //! Next edge in Active Edge List
-  TEdge*   PrevInAEL; //! Previous edge in Active Edge List
-  TEdge*   NextInSEL; //! Next edge in
-  TEdge*   PrevInSEL; //! Previous edge in
+  IntPoint Bot;     //! Bottom
+  IntPoint Curr;    //! current (updated for every new scanbeam)
+  IntPoint Top;     //! Top
+  double Dx;        //!
+  PolyType PolyTyp; //!
+  EdgeSide Side;    //! side only refers to current side of solution poly
+  int WindDelta;    //! ±1 depending on winding direction
+  int WindCnt;      //! winding count
+  int WindCnt2;     //! winding count of the opposite polytype
+  int OutIdx;       //! out index
+  TEdge *Next;      //!
+  TEdge *Prev;      //!
+  TEdge *NextInLML; //!
+  TEdge *NextInAEL; //! Next edge in Active Edge List
+  TEdge *PrevInAEL; //! Previous edge in Active Edge List
+  TEdge *NextInSEL; //! Next edge in
+  TEdge *PrevInSEL; //! Previous edge in
 };
 
 /**
  * @brief The IntersectNode struct
  */
 struct IntersectNode {
-  TEdge*   Edge1;
-  TEdge*   Edge2;
-  IntPoint Pt;
+  TEdge*   Edge1; //! first edge
+  TEdge*   Edge2; //! second edge
+  IntPoint Pt;    //! intersection point
 };
 
 /**
@@ -174,7 +183,7 @@ inline cInt Abs(cInt val) {
 //------------------------------------------------------------------------------
 
 void PolyTree::Clear() {
-  for(auto* i : AllNodes) {
+  for(auto *i : AllNodes) {
     delete i;
   }
   AllNodes.resize(0);
@@ -199,13 +208,6 @@ int PolyTree::Total() const {
 // PolyNode methods ...
 //------------------------------------------------------------------------------
 
-PolyNode::PolyNode() : Parent(nullptr), Index(0), m_IsOpen(false) {}
-//------------------------------------------------------------------------------
-
-int PolyNode::ChildCount() const {
-  return (int)Childs.size();
-}
-//------------------------------------------------------------------------------
 
 void PolyNode::AddChild(PolyNode& child) {
   auto cnt = (unsigned)Childs.size();
@@ -241,11 +243,6 @@ bool PolyNode::IsHole() const {
     node   = node->Parent;
   }
   return result;
-}
-//------------------------------------------------------------------------------
-
-bool PolyNode::IsOpen() const {
-  return m_IsOpen;
 }
 //------------------------------------------------------------------------------
 
@@ -1208,7 +1205,7 @@ bool ClipperBase::AddPaths(const Paths& ppg, PolyType PolyTyp, bool Closed) {
 
 void ClipperBase::Clear() {
   DisposeLocalMinimaList();
-  for(auto* edges : m_edges) {
+  for(auto *edges : m_edges) {
     delete[] edges;
   }
   m_edges.clear();
@@ -1225,7 +1222,7 @@ void ClipperBase::Reset() {
   // clears/resets priority_queue
   m_Scanbeam = ScanbeamList();
   // reset all edges ...
-  for(auto& lm : m_MinimaList) {
+  for(const auto& lm : m_MinimaList) {
     InsertScanbeam(lm.Y);
     TEdge* e = lm.LeftBound;
     if(e) {
@@ -3034,7 +3031,7 @@ void Clipper::BuildResult2(PolyTree& polytree) {
     if((outRec->IsOpen && cnt < 2) || (!outRec->IsOpen && cnt < 3))
       continue;
     FixHoleLinkage(*outRec);
-    auto pn = new PolyNode();
+    auto *pn = new PolyNode();
     // nb: polytree takes ownership of all the PolyNodes
     polytree.AllNodes.push_back(pn);
     outRec->PolyNd = pn;
@@ -3050,7 +3047,7 @@ void Clipper::BuildResult2(PolyTree& polytree) {
 
   // fixup PolyNode links etc ...
   polytree.Childs.reserve(m_PolyOuts.size());
-  for(auto outRec : m_PolyOuts) {
+  for(auto *outRec : m_PolyOuts) {
     if(!outRec->PolyNd)
       continue;
     if(outRec->IsOpen) {
@@ -3064,8 +3061,13 @@ void Clipper::BuildResult2(PolyTree& polytree) {
 }
 //------------------------------------------------------------------------------
 
+/**
+ * @brief SwapIntersectNodes Swap values of IntersectNodes
+ * @param int1 First node
+ * @param int2 Second node
+ */
 void SwapIntersectNodes(IntersectNode& int1, IntersectNode& int2) {
-  // just swap the contents (because fIntersectNodes is a single-linked-list)
+  // just swap the contents (because IntersectNodes is a single-linked-list)
   IntersectNode inode = int1;  // gets a copy of Int1
   int1.Edge1          = int2.Edge1;
   int1.Edge2          = int2.Edge2;
@@ -3076,7 +3078,7 @@ void SwapIntersectNodes(IntersectNode& int1, IntersectNode& int2) {
 }
 //------------------------------------------------------------------------------
 
-inline bool E2InsertsBeforeE1(TEdge& e1, TEdge& e2) {
+inline bool E2InsertsBeforeE1(const TEdge& e1, const TEdge& e2) {
   if(e2.Curr.X == e1.Curr.X) {
     if(e2.Top.Y > e1.Top.Y)
       return e2.Top.X < TopX(e1, e2.Top.Y);
@@ -3395,7 +3397,7 @@ static OutRec* ParseFirstLeft(OutRec* FirstLeft) {
 
 void Clipper::FixupFirstLefts1(OutRec* OldOutRec, OutRec* NewOutRec) {
   // tests if NewOutRec contains the polygon before reassigning FirstLeft
-  for(auto outRec : m_PolyOuts) {
+  for(auto *outRec : m_PolyOuts) {
     OutRec* firstLeft = ParseFirstLeft(outRec->FirstLeft);
     if(outRec->Pts && firstLeft == OldOutRec) {
       if(Poly2ContainsPoly1(outRec->Pts, NewOutRec->Pts))
@@ -3411,7 +3413,7 @@ void Clipper::FixupFirstLefts2(OutRec* InnerOutRec, OutRec* OuterOutRec) {
   // every polygon that's also contained by OuterOutRec's FirstLeft container
   //(including 0) to see if they've become inner to the new inner polygon ...
   OutRec* orfl = OuterOutRec->FirstLeft;
-  for(auto outRec : m_PolyOuts) {
+  for(auto *outRec : m_PolyOuts) {
     if(!outRec->Pts || outRec == OuterOutRec || outRec == InnerOutRec)
       continue;
     OutRec* firstLeft = ParseFirstLeft(outRec->FirstLeft);
@@ -3428,7 +3430,7 @@ void Clipper::FixupFirstLefts2(OutRec* InnerOutRec, OutRec* OuterOutRec) {
 //----------------------------------------------------------------------
 void Clipper::FixupFirstLefts3(OutRec* OldOutRec, OutRec* NewOutRec) {
   // reassigns FirstLeft WITHOUT testing if NewOutRec contains the polygon
-  for(auto outRec : m_PolyOuts) {
+  for(auto *outRec : m_PolyOuts) {
     OutRec* firstLeft = ParseFirstLeft(outRec->FirstLeft);
     if(outRec->Pts && firstLeft == OldOutRec)
       outRec->FirstLeft = NewOutRec;
@@ -3437,7 +3439,7 @@ void Clipper::FixupFirstLefts3(OutRec* OldOutRec, OutRec* NewOutRec) {
 //----------------------------------------------------------------------
 
 void Clipper::JoinCommonEdges() {
-  for(auto join : m_Joins) {
+  for(auto *join : m_Joins) {
     OutRec* outRec1 = GetOutRec(join->OutPt1->Idx);
     OutRec* outRec2 = GetOutRec(join->OutPt2->Idx);
 
@@ -3541,10 +3543,9 @@ DoublePoint GetUnitNormal(const IntPoint& pt1, const IntPoint& pt2) {
 // ClipperOffset class
 //------------------------------------------------------------------------------
 
-ClipperOffset::ClipperOffset(double miterLimit, double arcTolerance) {
-  this->MiterLimit   = miterLimit;
-  this->ArcTolerance = arcTolerance;
-  m_lowest.X         = -1;
+ClipperOffset::ClipperOffset(double miterLimit, double arcTolerance)
+    : MiterLimit(miterLimit), ArcTolerance(arcTolerance) {
+  m_lowest.X = -1;
 }
 //------------------------------------------------------------------------------
 
@@ -3554,8 +3555,9 @@ ClipperOffset::~ClipperOffset() {
 //------------------------------------------------------------------------------
 
 void ClipperOffset::Clear() {
-  for(int i = 0; i < m_polyNodes.ChildCount(); ++i)
-    delete m_polyNodes.Childs[i];
+  for(auto* node: m_polyNodes.Childs)
+      delete node;
+
   m_polyNodes.Childs.clear();
   m_lowest.X = -1;
 }
@@ -3565,7 +3567,7 @@ void ClipperOffset::AddPath(const Path& path, JoinType joinType, EndType endType
   int highI = (int)path.size() - 1;
   if(highI < 0)
     return;
-  auto newNode        = new PolyNode();
+  auto *newNode       = new PolyNode();
   newNode->m_jointype = joinType;
   newNode->m_endtype  = endType;
 
@@ -3576,13 +3578,14 @@ void ClipperOffset::AddPath(const Path& path, JoinType joinType, EndType endType
   newNode->Contour.reserve(highI + 1);
   newNode->Contour.push_back(path[0]);
   int j = 0, k = 0;
-  for(int i = 1; i <= highI; i++)
+  for(int i = 1; i <= highI; i++) {
     if(newNode->Contour[j] != path[i]) {
       j++;
       newNode->Contour.push_back(path[i]);
       if(path[i].Y > newNode->Contour[k].Y || (path[i].Y == newNode->Contour[k].Y && path[i].X < newNode->Contour[k].X))
         k = j;
     }
+  }
   if(endType == EndType::ClosedPolygon && j < 2) {
     delete newNode;
     return;
@@ -3612,16 +3615,14 @@ void ClipperOffset::FixOrientations() {
   // fixup orientations of all closed paths if the orientation of the
   // closed path with the lowermost vertex is wrong ...
   if(m_lowest.X >= 0 && !Orientation(m_polyNodes.Childs[(int)m_lowest.X]->Contour)) {
-    for(int i = 0; i < m_polyNodes.ChildCount(); ++i) {
-      PolyNode& node = *m_polyNodes.Childs[i];
-      if(node.m_endtype == EndType::ClosedPolygon || (node.m_endtype == EndType::ClosedLine && Orientation(node.Contour)))
-        ReversePath(node.Contour);
+    for(auto *node: m_polyNodes.Childs) {
+      if(node->m_endtype == EndType::ClosedPolygon || (node->m_endtype == EndType::ClosedLine && Orientation(node->Contour)))
+        ReversePath(node->Contour);
     }
   } else {
-    for(int i = 0; i < m_polyNodes.ChildCount(); ++i) {
-      PolyNode& node = *m_polyNodes.Childs[i];
-      if(node.m_endtype == EndType::ClosedLine && !Orientation(node.Contour))
-        ReversePath(node.Contour);
+    for(auto *node: m_polyNodes.Childs) {
+      if(node->m_endtype == EndType::ClosedLine && !Orientation(node->Contour))
+        ReversePath(node->Contour);
     }
   }
 }
@@ -3696,10 +3697,9 @@ void ClipperOffset::DoOffset(double delta) {
   // if Zero offset, just copy any CLOSED polygons to m_p and return ...
   if(NEAR_ZERO(delta)) {
     m_destPolys.reserve(m_polyNodes.ChildCount());
-    for(int i = 0; i < m_polyNodes.ChildCount(); i++) {
-      PolyNode& node = *m_polyNodes.Childs[i];
-      if(node.m_endtype == EndType::ClosedPolygon)
-        m_destPolys.push_back(node.Contour);
+    for(auto *node: m_polyNodes.Childs) {
+      if(node->m_endtype == EndType::ClosedPolygon)
+        m_destPolys.push_back(node->Contour);
     }
     return;
   }
@@ -3728,17 +3728,16 @@ void ClipperOffset::DoOffset(double delta) {
     m_sin = -m_sin;
 
   m_destPolys.reserve(m_polyNodes.ChildCount() * 2);
-  for(int i = 0; i < m_polyNodes.ChildCount(); i++) {
-    PolyNode& node = *m_polyNodes.Childs[i];
-    m_srcPoly      = node.Contour;
+  for(auto *node: m_polyNodes.Childs) {
+    m_srcPoly = node->Contour;
 
     int len = (int)m_srcPoly.size();
-    if(len == 0 || (delta <= 0 && (len < 3 || node.m_endtype != EndType::ClosedPolygon)))
+    if(len == 0 || (delta <= 0 && (len < 3 || node->m_endtype != EndType::ClosedPolygon)))
       continue;
 
     m_destPoly.clear();
     if(len == 1) {
-      if(node.m_jointype == JoinType::Round) {
+      if(node->m_jointype == JoinType::Round) {
         double X = 1.0, Y = 0.0;
         for(cInt j = 1; j <= steps; j++) {
           m_destPoly.push_back(IntPoint(Round(m_srcPoly[0].X + X * delta), Round(m_srcPoly[0].Y + Y * delta)));
@@ -3766,20 +3765,20 @@ void ClipperOffset::DoOffset(double delta) {
     m_normals.reserve(len);
     for(int j = 0; j < len - 1; ++j)
       m_normals.push_back(GetUnitNormal(m_srcPoly[j], m_srcPoly[j + 1]));
-    if(node.m_endtype == EndType::ClosedLine || node.m_endtype == EndType::ClosedPolygon)
+    if(node->m_endtype == EndType::ClosedLine || node->m_endtype == EndType::ClosedPolygon)
       m_normals.push_back(GetUnitNormal(m_srcPoly[len - 1], m_srcPoly[0]));
     else
       m_normals.push_back(DoublePoint(m_normals[len - 2]));
 
-    if(node.m_endtype == EndType::ClosedPolygon) {
+    if(node->m_endtype == EndType::ClosedPolygon) {
       int k = len - 1;
       for(int j = 0; j < len; ++j)
-        OffsetPoint(j, k, node.m_jointype);
+        OffsetPoint(j, k, node->m_jointype);
       m_destPolys.push_back(m_destPoly);
-    } else if(node.m_endtype == EndType::ClosedLine) {
+    } else if(node->m_endtype == EndType::ClosedLine) {
       int k = len - 1;
       for(int j = 0; j < len; ++j)
-        OffsetPoint(j, k, node.m_jointype);
+        OffsetPoint(j, k, node->m_jointype);
       m_destPolys.push_back(m_destPoly);
       m_destPoly.clear();
       // re-build m_normals ...
@@ -3789,15 +3788,15 @@ void ClipperOffset::DoOffset(double delta) {
       m_normals[0] = DoublePoint(-n.X, -n.Y);
       k            = 0;
       for(int j = len - 1; j >= 0; j--)
-        OffsetPoint(j, k, node.m_jointype);
+        OffsetPoint(j, k, node->m_jointype);
       m_destPolys.push_back(m_destPoly);
     } else {
       int k = 0;
       for(int j = 1; j < len - 1; ++j)
-        OffsetPoint(j, k, node.m_jointype);
+        OffsetPoint(j, k, node->m_jointype);
 
       IntPoint pt1;
-      if(node.m_endtype == EndType::OpenButt) {
+      if(node->m_endtype == EndType::OpenButt) {
         int j = len - 1;
         pt1   = IntPoint((cInt)Round(m_srcPoly[j].X + m_normals[j].X * delta), (cInt)Round(m_srcPoly[j].Y + m_normals[j].Y * delta));
         m_destPoly.push_back(pt1);
@@ -3808,7 +3807,7 @@ void ClipperOffset::DoOffset(double delta) {
         k            = len - 2;
         m_sinA       = 0;
         m_normals[j] = DoublePoint(-m_normals[j].X, -m_normals[j].Y);
-        if(node.m_endtype == EndType::OpenSquare)
+        if(node->m_endtype == EndType::OpenSquare)
           DoSquare(j, k);
         else
           DoRound(j, k);
@@ -3821,9 +3820,9 @@ void ClipperOffset::DoOffset(double delta) {
 
       k = len - 1;
       for(int j = k - 1; j > 0; --j)
-        OffsetPoint(j, k, node.m_jointype);
+        OffsetPoint(j, k, node->m_jointype);
 
-      if(node.m_endtype == EndType::OpenButt) {
+      if(node->m_endtype == EndType::OpenButt) {
         pt1 = IntPoint((cInt)Round(m_srcPoly[0].X - m_normals[0].X * delta), (cInt)Round(m_srcPoly[0].Y - m_normals[0].Y * delta));
         m_destPoly.push_back(pt1);
         pt1 = IntPoint((cInt)Round(m_srcPoly[0].X + m_normals[0].X * delta), (cInt)Round(m_srcPoly[0].Y + m_normals[0].Y * delta));
@@ -3831,7 +3830,7 @@ void ClipperOffset::DoOffset(double delta) {
       } else {
         k      = 1;
         m_sinA = 0;
-        if(node.m_endtype == EndType::OpenSquare)
+        if(node->m_endtype == EndType::OpenSquare)
           DoSquare(0, 1);
         else
           DoRound(0, 1);
@@ -3978,6 +3977,8 @@ void ReversePath(Path& p) {
 //------------------------------------------------------------------------------
 
 void ReversePaths(Paths& p) {
+  // TODO: consider ranges
+  // std::ranges::for_earch(p, Reverse
   for(auto& path : p)
     ReversePath(path);
 }
@@ -4136,6 +4137,7 @@ void Minkowski(const Path& poly, const Path& path, Paths& solution, bool isSum, 
   size_t pathCnt = path.size();
   Paths  pp;
   pp.reserve(pathCnt);
+
   if(isSum)
     for(size_t i = 0; i < pathCnt; ++i) {
       Path p;
@@ -4225,8 +4227,9 @@ void AddPolyNodeToPaths(const PolyNode& polynode, NodeType nodetype, Paths& path
 
   if(!polynode.Contour.empty() && match)
     paths.push_back(polynode.Contour);
-  for(int i = 0; i < polynode.ChildCount(); ++i)
-    AddPolyNodeToPaths(*polynode.Childs[i], nodetype, paths);
+
+  for(const auto *node: polynode.Childs)
+    AddPolyNodeToPaths(*node, nodetype, paths);
 }
 //------------------------------------------------------------------------------
 
@@ -4248,13 +4251,15 @@ void OpenPathsFromPolyTree(PolyTree& polytree, Paths& paths) {
   paths.resize(0);
   paths.reserve(polytree.Total());
   // Open paths are top level only, so ...
-  for(int i = 0; i < polytree.ChildCount(); ++i)
-    if(polytree.Childs[i]->IsOpen())
-      paths.push_back(polytree.Childs[i]->Contour);
+  for(const auto *node: polytree.Childs) {
+      if(node->IsOpen())
+        paths.push_back(node->Contour);
+  }
 }
 //------------------------------------------------------------------------------
 
 std::ostream& operator<<(std::ostream& s, const IntPoint& p) {
+  // TODO: fmt
   s << "(" << p.X << "," << p.Y << ")";
   return s;
 }
