@@ -810,7 +810,7 @@ bool FirstIsBottomPt(const OutPt* btmPt1, const OutPt* btmPt2) {
 //------------------------------------------------------------------------------
 
 OutPt* GetBottomPt(OutPt* pp) {
-  OutPt* dups = 0;
+  OutPt* dups = nullptr;
   OutPt* p    = pp->Next;
   while(p != pp) {
     if(p->Pt.Y > pp->Pt.Y) {
@@ -1351,7 +1351,7 @@ void ClipperBase::DeleteFromAEL(TEdge* e) {
 //------------------------------------------------------------------------------
 
 OutRec* ClipperBase::CreateOutRec() {
-  auto result       = new OutRec;
+  auto *result      = new OutRec;
   result->IsHole    = false;
   result->IsOpen    = false;
   result->FirstLeft = nullptr;
@@ -1557,7 +1557,7 @@ bool Clipper::ExecuteInternal() {
 
   if(succeeded) {
     // fix orientations ...
-    for(auto outRec : m_PolyOuts) {
+    for(auto *outRec : m_PolyOuts) {
       if(!outRec->Pts || outRec->IsOpen)
         continue;
       if((outRec->IsHole ^ m_ReverseOutput) == (Area(*outRec) > 0))
@@ -1568,7 +1568,7 @@ bool Clipper::ExecuteInternal() {
       JoinCommonEdges();
 
     // unfortunately FixupOutPolygon() must be done after JoinCommonEdges()
-    for(auto outRec : m_PolyOuts) {
+    for(auto *outRec : m_PolyOuts) {
       if(!outRec->Pts)
         continue;
       if(outRec->IsOpen)
@@ -1870,7 +1870,7 @@ void Clipper::CopyAELToSEL() {
 //------------------------------------------------------------------------------
 
 void Clipper::AddJoin(OutPt* op1, OutPt* op2, const IntPoint &OffPt) {
-  auto j    = new Join;
+  auto *j   = new Join;
   j->OutPt1 = op1;
   j->OutPt2 = op2;
   j->OffPt  = OffPt;
@@ -1879,20 +1879,20 @@ void Clipper::AddJoin(OutPt* op1, OutPt* op2, const IntPoint &OffPt) {
 //------------------------------------------------------------------------------
 
 void Clipper::ClearJoins() {
-  for(auto i : m_Joins)
+  for(auto *i : m_Joins)
     delete i;
   m_Joins.resize(0);
 }
 //------------------------------------------------------------------------------
 
 void Clipper::ClearGhostJoins() {
-  for(auto i : m_GhostJoins)
+  for(auto *i : m_GhostJoins)
     delete i;
   m_GhostJoins.resize(0);
 }
 //------------------------------------------------------------------------------
 
-void Clipper::AddGhostJoin(OutPt* op, const IntPoint OffPt) {
+void Clipper::AddGhostJoin(OutPt* op, const IntPoint& OffPt) {
   Join* j   = new Join;
   j->OutPt1 = op;
   j->OutPt2 = nullptr;
@@ -1945,7 +1945,7 @@ void Clipper::InsertLocalMinimaIntoAEL(const cInt botY) {
 
     // if any output polygons share an edge, they'll need joining later ...
     if(Op1 && IsHorizontal(*rb) && m_GhostJoins.size() > 0 && (rb->WindDelta != 0)) {
-      for(auto jr : m_GhostJoins) {
+      for(auto *jr : m_GhostJoins) {
         // if the horizontal Rb and a 'ghost' horizontal overlap, then convert
         // the 'ghost' join to a real join ready for later ...
         if(HorzSegmentsOverlap(jr->OutPt1->Pt.X, jr->OffPt.X, rb->Bot.X, rb->Top.X))
@@ -2206,7 +2206,7 @@ void Clipper::SetHoleState(TEdge* e, OutRec* outrec) {
       if(!eTmp)
         eTmp = e2;
       else if(eTmp->OutIdx == e2->OutIdx)
-        eTmp = 0;
+        eTmp = nullptr;
     }
     e2 = e2->PrevInAEL;
   }
@@ -2353,9 +2353,9 @@ void Clipper::AppendPolygon(TEdge* e1, TEdge* e2) {
 
 OutPt* Clipper::AddOutPt(TEdge* e, const IntPoint& pt) {
   if(e->OutIdx < 0) {
-    auto outRec    = CreateOutRec();
+    auto *outRec   = CreateOutRec();
     outRec->IsOpen = (e->WindDelta == 0);
-    OutPt* newOp   = new OutPt;
+    auto *newOp    = new OutPt;
     outRec->Pts    = newOp;
     newOp->Idx     = outRec->Idx;
     newOp->Pt      = pt;
@@ -2366,7 +2366,7 @@ OutPt* Clipper::AddOutPt(TEdge* e, const IntPoint& pt) {
     e->OutIdx = outRec->Idx;
     return newOp;
   } else {
-    auto outRec = m_PolyOuts[e->OutIdx];
+    auto *outRec = m_PolyOuts[e->OutIdx];
     // OutRec.Pts is the 'Left-most' point & OutRec.Pts.Prev is the 'Right-most'
     OutPt* op = outRec->Pts;
 
@@ -2376,7 +2376,7 @@ OutPt* Clipper::AddOutPt(TEdge* e, const IntPoint& pt) {
     else if(!ToFront && (pt == op->Prev->Pt))
       return op->Prev;
 
-    auto newOp        = new OutPt;
+    auto *newOp       = new OutPt;
     newOp->Idx        = outRec->Idx;
     newOp->Pt         = pt;
     newOp->Next       = op;
@@ -2576,7 +2576,7 @@ void Clipper::ProcessHorizontal(TEdge* horzEdge) {
             maxRit++;
           }
         }
-      };
+      }
 
       if((dir == Direction::LeftToRight && e->Curr.X > horzRight) || (dir == Direction::RightToLeft && e->Curr.X < horzLeft))
         break;
@@ -2703,7 +2703,7 @@ bool Clipper::ProcessIntersections(const cInt topY) {
 //------------------------------------------------------------------------------
 
 void Clipper::DisposeIntersectNodes() {
-  for(auto i : m_IntersectList)
+  for(auto *i : m_IntersectList)
     delete i;
   m_IntersectList.clear();
 }
@@ -2735,7 +2735,7 @@ void Clipper::BuildIntersectList(const cInt topY) {
         IntersectPoint(*e, *eNext, Pt);
         if(Pt.Y < topY)
           Pt = IntPoint(TopX(*e, topY), topY);
-        auto newNode   = new IntersectNode;
+        auto *newNode  = new IntersectNode;
         newNode->Edge1 = e;
         newNode->Edge2 = eNext;
         newNode->Pt    = Pt;
@@ -2757,7 +2757,7 @@ void Clipper::BuildIntersectList(const cInt topY) {
 
 
 void Clipper::ProcessIntersectList() {
-  for(auto iNode : m_IntersectList) {
+  for(auto *iNode : m_IntersectList) {
     {
       IntersectEdges(iNode->Edge1, iNode->Edge2, iNode->Pt);
       SwapPositionsInAEL(iNode->Edge1, iNode->Edge2);
@@ -3029,7 +3029,7 @@ void Clipper::BuildResult2(PolyTree& polytree) {
   polytree.Clear();
   polytree.AllNodes.reserve(m_PolyOuts.size());
   // add each output polygon/contour to polytree ...
-  for(auto outRec : m_PolyOuts) {
+  for(auto *outRec : m_PolyOuts) {
     int cnt = PointCount(outRec->Pts);
     if((outRec->IsOpen && cnt < 2) || (!outRec->IsOpen && cnt < 3))
       continue;
@@ -3206,7 +3206,7 @@ bool JoinHorz(OutPt* op1, OutPt* op1b, OutPt* op2, OutPt* op2b, const IntPoint P
       op2     = op2b;
       op2->Pt = Pt;
       op2b    = DupOutPt(op2, !DiscardLeft);
-    };
+    }
   } else {
     while(op2->Next->Pt.X >= Pt.X && op2->Next->Pt.X <= op2->Pt.X && op2->Next->Pt.Y == Pt.Y)
       op2 = op2->Next;
@@ -3217,8 +3217,8 @@ bool JoinHorz(OutPt* op1, OutPt* op1b, OutPt* op2, OutPt* op2b, const IntPoint P
       op2     = op2b;
       op2->Pt = Pt;
       op2b    = DupOutPt(op2, DiscardLeft);
-    };
-  };
+    }
+  }
 
   if((Dir1 == Direction::LeftToRight) == DiscardLeft) {
     op1->Prev  = op2;
@@ -3345,7 +3345,7 @@ bool Clipper::JoinPoints(Join* j, OutRec* outRec1, OutRec* outRec2) {
         op1b = op1b->Prev;
       if((op1b->Pt.Y > op1->Pt.Y) || !SlopesEqual(op1->Pt, op1b->Pt, j->OffPt, m_UseFullRange))
         return false;
-    };
+    }
     op2b = op2->Next;
     while((op2b->Pt == op2->Pt) && (op2b != op2))
       op2b = op2b->Next;
@@ -4056,7 +4056,7 @@ bool PointsAreClose(IntPoint pt1, IntPoint pt2, double distSqrd) {
 //------------------------------------------------------------------------------
 
 OutPt* ExcludeOp(OutPt* op) {
-  auto result    = op->Prev;
+  auto *result   = op->Prev;
   result->Next   = op->Next;
   op->Next->Prev = result;
   result->Idx    = 0;

@@ -13,7 +13,7 @@ AlignConsecutiveAssignments                    : true
 AlignConsecutiveDeclarations                   : true
 AllowShortFunctionsOnASingleLine               : Inline
 AlwaysBreakTemplateDeclarations                : true
-ColumnLimit                                    : 160
+ColumnLimit                                    : 120
 ConstructorInitializerIndentWidth              : 6
 IndentCaseLabels                               : true
 MaxEmptyLinesToKeep                            : 2

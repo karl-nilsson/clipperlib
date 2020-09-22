@@ -141,7 +141,7 @@ struct IntPoint {
    * @param X value
    * @param Y value
    */
-  IntPoint(cInt x = 0, cInt y = 0) : X(x), Y(y){};
+  IntPoint(cInt x = 0, cInt y = 0) : X(x), Y(y){}
 #endif
 
   /**
@@ -262,7 +262,7 @@ typedef std::vector<PolyNode*> PolyNodes;
 class PolyNode {
 public:
   PolyNode();
-  virtual ~PolyNode(){};
+  virtual ~PolyNode(){}
   Path      Contour;
   PolyNodes Childs;
   PolyNode* Parent;
@@ -303,7 +303,7 @@ private:
  */
 class PolyTree : public PolyNode {
 public:
-  ~PolyTree() { Clear(); };
+  ~PolyTree() { Clear(); }
 
   /**
    * @brief GetFirst Get the first child in the tre
@@ -483,13 +483,13 @@ public:
    * @brief PreserveCollinear
    * @return
    */
-  bool PreserveCollinear() noexcept { return m_PreserveCollinear; };
+  bool PreserveCollinear() noexcept { return m_PreserveCollinear; }
 
   /**
    * @brief PreserveCollinear
    * @param value
    */
-  void PreserveCollinear(bool value) noexcept { m_PreserveCollinear = value; };
+  void PreserveCollinear(bool value) noexcept { m_PreserveCollinear = value; }
 
 protected:
   void   DisposeLocalMinimaList();
@@ -537,10 +537,10 @@ public:
   bool Execute(ClipType clipType, Paths& solution, PolyFillType subjFillType, PolyFillType clipFillType);
   bool Execute(ClipType clipType, PolyTree& polytree, PolyFillType fillType = PolyFillType::EvenOdd);
   bool Execute(ClipType clipType, PolyTree& polytree, PolyFillType subjFillType, PolyFillType clipFillType);
-  bool ReverseSolution() { return m_ReverseOutput; };
-  void ReverseSolution(bool value) { m_ReverseOutput = value; };
-  bool StrictlySimple() { return m_StrictSimple; };
-  void StrictlySimple(bool value) { m_StrictSimple = value; };
+  bool ReverseSolution() { return m_ReverseOutput; }
+  void ReverseSolution(bool value) { m_ReverseOutput = value; }
+  bool StrictlySimple() { return m_StrictSimple; }
+  void StrictlySimple(bool value) { m_StrictSimple = value; }
 #ifdef use_xyz
   /**
    * @brief ZFillFunction
@@ -618,7 +618,7 @@ private:
   void    AddJoin(OutPt* op1, OutPt* op2, const IntPoint &offPt);
   void    ClearJoins();
   void    ClearGhostJoins();
-  void    AddGhostJoin(OutPt* op, const IntPoint offPt);
+  void    AddGhostJoin(OutPt* op, const IntPoint& offPt);
   bool    JoinPoints(Join* j, OutRec* outRec1, OutRec* outRec2);
   void    JoinCommonEdges();
   void    DoSimplePolygons();
