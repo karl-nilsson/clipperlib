@@ -107,10 +107,9 @@ public:
     rec.right  = rec.left;
     rec.top    = polyInfos[i].paths[j][0].Y;
     rec.bottom = rec.top;
-    for(; i < polyInfos.size(); ++i) {
-      for(auto &path: polyInfos[i].paths) {
-        for(Path::size_type k = 0; k < path.size(); ++k) {
-          IntPoint ip = path[k];
+    for(const auto &p: polyInfos) {
+      for(const auto &path: p.paths) {
+        for(const auto &ip: path) {
           if(ip.X < rec.left)
             rec.left = ip.X;
           else if(ip.X > rec.right)
@@ -149,41 +148,46 @@ public:
     setlocale(LC_NUMERIC, "C");
     file.precision(2);
 
-    for(auto &i: polyInfos) {
+    for(const auto &polyinfo: polyInfos) {
       file << " <path d=\"";
-      for(Paths::size_type j = 0; j < i.paths.size(); ++j) {
-        if(i.paths[j].size() < 3)
+      for(const auto &path: polyinfo.paths) {
+        // skip invalid polygons
+        if(path.size() < 3)
           continue;
-        file << " M " << ((double)i.paths[j][0].X * scale + offsetX) << " "
-             << ((double)i.paths[j][0].Y * scale + offsetY);
-        for(Path::size_type k = 1; k < i.paths[j].size(); ++k) {
-          IntPoint ip = i.paths[j][k];
-          double   x  = (double)ip.X * scale;
-          double   y  = (double)ip.Y * scale;
+
+        // clang-format off
+        file << " M " << ((double)path[0].X * scale + offsetX)
+             << " "   << ((double)path[0].Y * scale + offsetY);
+        // clang-format on
+
+        for(const auto &point: path) {
+          double   x  = (double)point.X * scale;
+          double   y  = (double)point.Y * scale;
           file << " L " << (x + offsetX) << " " << (y + offsetY);
         }
         file << " z";
       }
       // clang-format off
-      file << poly_end[0] << ColorToHtml(i.si.brushClr)
-           << poly_end[1] << GetAlphaAsFrac(i.si.brushClr)
-           << poly_end[2] << (i.si.pft == PolyFillType::EvenOdd ? "evenodd" : "nonzero")
-           << poly_end[3] << ColorToHtml(i.si.penClr)
-           << poly_end[4] << GetAlphaAsFrac(i.si.penClr)
-           << poly_end[5] << i.si.penWidth
+      file << poly_end[0] << ColorToHtml(polyinfo.si.brushClr)
+           << poly_end[1] << GetAlphaAsFrac(polyinfo.si.brushClr)
+           << poly_end[2] << (polyinfo.si.pft == PolyFillType::EvenOdd ? "evenodd" : "nonzero")
+           << poly_end[3] << ColorToHtml(polyinfo.si.penClr)
+           << poly_end[4] << GetAlphaAsFrac(polyinfo.si.penClr)
+           << poly_end[5] << polyinfo.si.penWidth
            << poly_end[6];
       // clang-format on
 
-      if(i.si.showCoords) {
+      if(polyinfo.si.showCoords) {
         file << "<g font-family=\"Verdana\" font-size=\"11\" fill=\"black\">\n\n";
-        for(Paths::size_type j = 0; j < i.paths.size(); ++j) {
-          if(i.paths[j].size() < 3)
+        for(const auto &path: polyinfo.paths) {
+          // skip invalid polygons
+          if(path.size() < 3)
             continue;
-          for(Path::size_type k = 0; k < i.paths[j].size(); ++k) {
-            IntPoint ip = i.paths[j][k];
-            file << "<text x=\"" << (int)(ip.X * scale + offsetX)
-                 << "\" y=\"" << (int)(ip.Y * scale + offsetY) << "\">"
-                 << ip.X << "," << ip.Y << "</text>\n\n";
+          // print all points of polygon to file
+          for(const auto &point: path) {
+            file << "<text x=\"" << (int)(point.X * scale + offsetX)
+                 << "\" y=\"" << (int)(point.Y * scale + offsetY) << "\">"
+                 << point.X << "," << point.Y << "</text>\n\n";
           }
         }
         file << "</g>\n";
