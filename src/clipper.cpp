@@ -1195,7 +1195,7 @@ bool ClipperBase::AddPath(const Path& pg, PolyType PolyTyp, bool Closed) {
 
 bool ClipperBase::AddPaths(const Paths& ppg, PolyType PolyTyp, bool Closed) {
   bool result = false;
-  for(const auto& i : ppg) {
+  for(const auto &i : ppg) {
     if(AddPath(i, PolyTyp, Closed))
       result = true;
   }
@@ -1222,7 +1222,7 @@ void ClipperBase::Reset() {
   // clears/resets priority_queue
   m_Scanbeam = ScanbeamList();
   // reset all edges ...
-  for(const auto& lm : m_MinimaList) {
+  for(const auto &lm : m_MinimaList) {
     InsertScanbeam(lm.Y);
     TEdge* e = lm.LeftBound;
     if(e) {
@@ -4190,7 +4190,7 @@ void TranslatePath(const Path& input, Path& output, const IntPoint delta) {
 
 void MinkowskiSum(const Path& pattern, const Paths& paths, Paths& solution, bool pathIsClosed) {
   Clipper c;
-  for(const auto& path : paths) {
+  for(const auto &path : paths) {
     Paths tmp;
     Minkowski(pattern, path, tmp, true, pathIsClosed);
     c.AddPaths(tmp, PolyType::Subject, true);
@@ -4279,7 +4279,7 @@ std::ostream& operator<<(std::ostream& s, const Path& p) {
 //------------------------------------------------------------------------------
 
 std::ostream& operator<<(std::ostream& s, const Paths& p) {
-  for(const auto& i : p)
+  for(const auto &i : p)
     s << i;
   s << "\n";
   return s;
