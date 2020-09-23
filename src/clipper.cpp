@@ -4106,8 +4106,8 @@ void CleanPolygon(const Path& in_poly, Path& out_poly, double distance) {
   if(size < 3)
     size = 0;
   out_poly.resize(size);
-  for(size_t i = 0; i < size; ++i) {
-    out_poly[i] = op->Pt;
+  for(auto &point: out_poly) {
+    point       = op->Pt;
     op          = op->Next;
   }
   delete[] outPts;
@@ -4139,19 +4139,19 @@ void Minkowski(const Path& poly, const Path& path, Paths& solution, bool isSum, 
   pp.reserve(pathCnt);
 
   if(isSum)
-    for(size_t i = 0; i < pathCnt; ++i) {
+    for(const auto &point1: path) {
       Path p;
       p.reserve(polyCnt);
-      for(auto j : poly)
-        p.push_back(IntPoint(path[i].X + j.X, path[i].Y + j.Y));
+      for(const auto &point2 : poly)
+        p.push_back(IntPoint(point1.X + point2.X, point1.Y + point2.Y));
       pp.push_back(p);
     }
   else
-    for(size_t i = 0; i < pathCnt; ++i) {
+    for(const auto &point1: path) {
       Path p;
       p.reserve(polyCnt);
-      for(auto j : poly)
-        p.push_back(IntPoint(path[i].X - j.X, path[i].Y - j.Y));
+      for(const auto &point2 : poly)
+        p.push_back(IntPoint(point1.X - point2.X, point1.Y - point2.Y));
       pp.push_back(p);
     }
 
