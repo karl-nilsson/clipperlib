@@ -30,6 +30,8 @@ class SVGBuilder {
    * @return string of hex color value
    */
   static string ColorToHtml(unsigned clr) {
+    // TODO: fmt
+    // return fmt::format("#{:06X}", clr)
     stringstream ss;
     ss << '#' << hex << std::setfill('0') << setw(6) << (clr & 0xFFFFFF);
     return ss.str();
@@ -82,7 +84,7 @@ public:
   StyleInfo style;
 
   void AddPaths(Paths& poly) {
-    if(poly.size() == 0)
+    if(poly.empty())
       return;
     polyInfos.push_back(PolyInfo(poly, style));
   }
@@ -91,14 +93,16 @@ public:
     // calculate the bounding rect ...
     PolyInfoList::size_type i = 0;
     Paths::size_type        j = 0;
+    // skip over empty paths
     while(i < polyInfos.size()) {
       j = 0;
-      while(j < polyInfos[i].paths.size() && polyInfos[i].paths[j].size() == 0)
+      while(j < polyInfos[i].paths.size() && polyInfos[i].paths[j].empty())
         j++;
       if(j < polyInfos[i].paths.size())
         break;
       i++;
     }
+    // if all paths are empty, short-circuit
     if(i == polyInfos.size())
       return false;
 
@@ -107,17 +111,19 @@ public:
     rec.right  = rec.left;
     rec.top    = polyInfos[i].paths[j][0].Y;
     rec.bottom = rec.top;
+
+    // find correct values for bounding rectangle
     for(const auto &p: polyInfos) {
       for(const auto &path: p.paths) {
-        for(const auto &ip: path) {
-          if(ip.X < rec.left)
-            rec.left = ip.X;
-          else if(ip.X > rec.right)
-            rec.right = ip.X;
-          if(ip.Y < rec.top)
-            rec.top = ip.Y;
-          else if(ip.Y > rec.bottom)
-            rec.bottom = ip.Y;
+        for(const auto &point: path) {
+          if(point.X < rec.left)
+            rec.left = point.X;
+          else if(point.X > rec.right)
+            rec.right = point.X;
+          if(point.Y < rec.top)
+            rec.top = point.Y;
+          else if(point.Y > rec.bottom)
+            rec.bottom = point.Y;
         }
       }
     }
@@ -227,7 +233,7 @@ const std::string SVGBuilder::poly_end[] = {
 // Miscellaneous function ...
 //------------------------------------------------------------------------------
 
-bool SaveToFile(const string& filename, Paths& ppg, double scale = 1.0, unsigned decimal_places = 0) {
+bool SaveToFile(const string& filename, const Paths& ppg, double scale = 1.0, unsigned decimal_places = 0) {
   ofstream ofs(filename);
   if(!ofs)
     return false;
@@ -237,8 +243,8 @@ bool SaveToFile(const string& filename, Paths& ppg, double scale = 1.0, unsigned
   ofs << setprecision(decimal_places) << std::fixed;
 
   Path pg;
-  for(auto &i: ppg) {
-    for(auto &j: i)
+  for(const auto &i: ppg) {
+    for(const auto &j: i)
       ofs << j.X / scale << ", " << j.Y / scale << "," << std::endl;
     ofs << std::endl;
   }
@@ -272,7 +278,7 @@ bool LoadFromFile(Paths& ppg, const string& filename, double scale) {
     double X = 0.0, Y = 0.0;
     if(!(ss >> X)) {
       // ie blank lines => flag start of next polygon
-      if(pg.size() > 0)
+      if(!pg.empty())
         ppg.push_back(pg);
       pg.clear();
       continue;
@@ -294,7 +300,7 @@ bool LoadFromFile(Paths& ppg, const string& filename, double scale) {
       break;  // oops!
     pg.push_back(IntPoint((cInt)(X * scale), (cInt)(Y * scale)));
   }
-  if(pg.size() > 0)
+  if(!pg.empty())
     ppg.push_back(pg);
   ifs.close();
   return true;

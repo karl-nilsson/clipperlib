@@ -402,8 +402,8 @@ double Area(const Path& poly) {
 
   // compare each point to previous, then aggregate the results
   double a = 0;
-  auto* prev_point = &poly[size - 1];
-  for(auto &point: poly) {
+  const auto* prev_point = &poly[size - 1];
+  for(const auto &point: poly) {
     a += ((double)prev_point->X + point.X) * ((double)prev_point->Y - point.Y);
     prev_point = &point;
   }
@@ -1949,7 +1949,7 @@ void Clipper::InsertLocalMinimaIntoAEL(const cInt botY) {
       continue;
 
     // if any output polygons share an edge, they'll need joining later ...
-    if(Op1 && IsHorizontal(*rb) && m_GhostJoins.size() > 0 && (rb->WindDelta != 0)) {
+    if(Op1 && IsHorizontal(*rb) && !m_GhostJoins.empty() && (rb->WindDelta != 0)) {
       for(auto *jr : m_GhostJoins) {
         // if the horizontal Rb and a 'ghost' horizontal overlap, then convert
         // the 'ghost' join to a real join ready for later ...
@@ -2540,7 +2540,7 @@ void Clipper::ProcessHorizontal(TEdge* horzEdge) {
 
   MaximaList::const_iterator         maxIt;
   MaximaList::const_reverse_iterator maxRit;
-  if(m_Maxima.size() > 0) {
+  if(!m_Maxima.empty()) {
     // get the first maxima in range (X) ...
     if(dir == Direction::LeftToRight) {
       maxIt = m_Maxima.begin();
@@ -2567,7 +2567,7 @@ void Clipper::ProcessHorizontal(TEdge* horzEdge) {
       // this code block inserts extra coords into horizontal edges (in output
       // polygons) wherever maxima touch these horizontal edges. This helps
       //'simplifying' polygons (ie if the Simplify property is set).
-      if(m_Maxima.size() > 0) {
+      if(!m_Maxima.empty()) {
         if(dir == Direction::LeftToRight) {
           while(maxIt != m_Maxima.end() && *maxIt < e->Curr.X) {
             if(horzEdge->OutIndex >= 0 && !IsOpen)
@@ -3016,7 +3016,7 @@ void Clipper::BuildResult(Paths& polys) {
     if(!m_PolyOut->Pts)
       continue;
     Path pg;
-    auto p   = m_PolyOut->Pts->Prev;
+    auto *p  = m_PolyOut->Pts->Prev;
     int  cnt = PointCount(p);
     if(cnt < 2)
       continue;
@@ -3658,7 +3658,7 @@ void ClipperOffset::Execute(Paths& solution, double delta) {
     clpr.AddPath(outer, PolyType::Subject, true);
     clpr.ReverseSolution(true);
     clpr.Execute(ClipType::Union, solution, PolyFillType::Negative, PolyFillType::Negative);
-    if(solution.size() > 0)
+    if(!solution.empty())
       solution.erase(solution.begin());
   }
 }
