@@ -400,10 +400,12 @@ double Area(const Path& poly) {
     return 0;
   }
 
+  // compare each point to previous, then aggregate the results
   double a = 0;
-  for(int i = 0, j = size - 1; i < size; ++i) {
-    a += ((double)poly[j].X + poly[i].X) * ((double)poly[j].Y - poly[i].Y);
-    j = i;
+  auto* prev_point = &poly[size - 1];
+  for(auto &point: poly) {
+    a += ((double)prev_point->X + point.X) * ((double)prev_point->Y - point.Y);
+    prev_point = &point;
   }
   return -a * 0.5;
 }
@@ -3033,6 +3035,7 @@ void Clipper::BuildResult2(PolyTree& polytree) {
   // add each output polygon/contour to polytree ...
   for(auto *outRec : m_PolyOuts) {
     int cnt = PointCount(outRec->Pts);
+    // skip invalid polygons
     if((outRec->IsOpen && cnt < 2) || (!outRec->IsOpen && cnt < 3))
       continue;
     FixHoleLinkage(*outRec);
@@ -3687,8 +3690,8 @@ void ClipperOffset::Execute(PolyTree& solution, double delta) {
       solution.Childs.reserve(outerNode->ChildCount());
       solution.Childs[0]         = outerNode->Childs[0];
       solution.Childs[0]->Parent = outerNode->Parent;
-      for(int i = 1; i < outerNode->ChildCount(); ++i)
-        solution.AddChild(*outerNode->Childs[i]);
+      for(auto* child: outerNode->Childs)
+        solution.AddChild(*child);
     } else
       solution.Clear();
   }

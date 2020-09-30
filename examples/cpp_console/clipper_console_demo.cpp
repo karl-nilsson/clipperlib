@@ -311,9 +311,9 @@ bool LoadFromFile(Paths& ppg, const string& filename, double scale) {
 void MakeRandomPoly(int edgeCount, int width, int height, Paths& poly) {
   poly.resize(1);
   poly[0].resize(edgeCount);
-  for(int i = 0; i < edgeCount; i++) {
-    poly[0][i].X = rand() % width;
-    poly[0][i].Y = rand() % height;
+  for(auto& point: poly[0]) {
+    point.X = rand() % width;
+    point.Y = rand() % height;
   }
 }
 //------------------------------------------------------------------------------
