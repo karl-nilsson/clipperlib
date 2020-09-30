@@ -280,17 +280,19 @@ public:
   bool operator!=(const Int128& val) const { return !(*this == val); }
 
   bool operator>(const Int128& val) const {
-    if(hi != val.hi)
+    if(hi != val.hi) {
       return hi > val.hi;
-    else
+    } else {
       return lo > val.lo;
+    }
   }
 
   bool operator<(const Int128& val) const {
-    if(hi != val.hi)
+    if(hi != val.hi) {
       return hi < val.hi;
-    else
+    } else {
       return lo < val.lo;
+    }
   }
 
   bool operator>=(const Int128& val) const { return !(*this < val); }
@@ -324,21 +326,24 @@ public:
 
   Int128 operator-() const  // unary negation
   {
-    if(lo == 0)
+    if(lo == 0) {
       return Int128(-hi, 0);
-    else
+    } else {
       return Int128(~hi, ~lo + 1);
+    }
   }
 
   operator double() const {
     const double shift64 = 18446744073709551616.0;  // 2^64
     if(hi < 0) {
-      if(lo == 0)
+      if(lo == 0) {
         return (double)hi * shift64;
-      else
+      } else {
         return -(double)(~lo + ~hi * shift64);
-    } else
+      }
+    } else {
       return (double)(lo + hi * shift64);
+    }
   }
 };
 //------------------------------------------------------------------------------
@@ -448,7 +453,7 @@ int PointInPolygon(const IntPoint& pt, const Path& path) {
   IntPoint ip = path[0];
   // loop over the points in the path
   for(size_t i = 1; i <= cnt; ++i) {
-    // the next point in the path
+    // the next point in the path, loop back to first point when necessary
     IntPoint ipNext = (i == cnt ? path[0] : path[i]);
     if(ipNext.Y == pt.Y) {
       if((ipNext.X == pt.X) || (ip.Y == pt.Y && ((ipNext.X > pt.X) == (ip.X < pt.X))))
@@ -4260,6 +4265,7 @@ void OpenPathsFromPolyTree(PolyTree& polytree, Paths& paths) {
 
 std::ostream& operator<<(std::ostream& s, const IntPoint& p) {
   // TODO: fmt
+  // s << fmt::format("({},{})", p.X, p.Y);
   s << "(" << p.X << "," << p.Y << ")";
   return s;
 }
@@ -4273,7 +4279,9 @@ std::ostream& operator<<(std::ostream& s, const Path& p) {
     s << "(" << p[i].X << "," << p[i].Y << "), ";
   s << "(" << p[last].X << "," << p[last].Y << ")\n";
   // TODO: ranges
-  // ranges::view::join(string(","), i);
+  // s << p | ranges::views::transform(
+  //                  [](IntPoint &point) {return fmt::format"({},{})", point.X, point.Y);})
+  //   << std::endl;
   return s;
 }
 //------------------------------------------------------------------------------
