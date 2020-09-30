@@ -618,7 +618,7 @@ private:
   void    ProcessHorizontal(TEdge* horzEdge);
   void    AddLocalMaxPoly(TEdge* e1, TEdge* e2, const IntPoint& pt);
   OutPt*  AddLocalMinPoly(TEdge* e1, TEdge* e2, const IntPoint& pt);
-  OutRec* GetOutRec(int idx);
+  OutRec* GetOutRec(int index);
   void    AppendPolygon(TEdge* e1, TEdge* e2);
   void    IntersectEdges(TEdge* e1, TEdge* e2, IntPoint& pt);
   OutPt*  AddOutPt(TEdge* e, const IntPoint& pt);
