@@ -265,7 +265,7 @@ public:
 
   Int128(long64 _lo = 0): lo(_lo), hi(_lo < 0 ? -1: 0) {}
 
-  Int128(const Int128& val) : lo(val.lo), hi(val.hi) {}
+  Int128(const Int128& val) = default;
 
   Int128(const long64& _hi, const ulong64& _lo) : lo(_lo), hi(_hi) {}
 
@@ -3154,9 +3154,10 @@ void Clipper::InsertEdgeIntoAEL(TEdge* edge, TEdge* startEdge) {
 //----------------------------------------------------------------------
 
 OutPt* DupOutPt(OutPt* outPt, bool InsertAfter) {
-  OutPt* result = new OutPt;
+  auto* result  = new OutPt;
   result->Pt    = outPt->Pt;
   result->Index = outPt->Index;
+
   if(InsertAfter) {
     result->Next      = outPt->Next;
     result->Prev      = outPt;
