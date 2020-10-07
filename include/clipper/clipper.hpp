@@ -666,7 +666,7 @@ public:
    * @param miterLimit
    * @param roundPrecision
    */
-  ClipperOffset(double miterLimit = 2.0, double roundPrecision = 0.25);
+  ClipperOffset(double miterLimit = 2.0, double arcTolerance = 0.25);
   ~ClipperOffset();
   void   AddPath(const Path& path, JoinType joinType, EndType endType);
   void   AddPaths(const Paths& paths, JoinType joinType, EndType endType);
