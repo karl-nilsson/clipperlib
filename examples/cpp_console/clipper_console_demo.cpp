@@ -14,6 +14,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <limits>
 
 using namespace std;
 using namespace ClipperLib;
@@ -90,44 +91,41 @@ public:
   }
 
   bool SaveToFile(const string& filename, double scale = 1.0, int margin = 10) {
-    // calculate the bounding rect ...
-    PolyInfoList::size_type i = 0;
-    Paths::size_type        j = 0;
-    // skip over empty paths
-    while(i < polyInfos.size()) {
-      j = 0;
-      while(j < polyInfos[i].paths.size() && polyInfos[i].paths[j].empty())
-        j++;
-      if(j < polyInfos[i].paths.size())
-        break;
-      i++;
-    }
-    // if all paths are empty, short-circuit
-    if(i == polyInfos.size())
-      return false;
-
+    // calculate the bounding rectangle
+    bool empty = true;
     IntRect rec;
-    rec.left   = polyInfos[i].paths[j][0].X;
-    rec.right  = rec.left;
-    rec.top    = polyInfos[i].paths[j][0].Y;
-    rec.bottom = rec.top;
+    rec.left   = std::numeric_limits<cInt>::max();
+    rec.right  = std::numeric_limits<cInt>::min();
+    rec.top    = std::numeric_limits<cInt>::max();
+    rec.bottom = std::numeric_limits<cInt>::min();
 
     // find correct values for bounding rectangle
     for(const auto &p: polyInfos) {
       for(const auto &path: p.paths) {
         for(const auto &point: path) {
-          if(point.X < rec.left)
+          if(empty) {
+            empty = false;
+          }
+
+          if(point.X < rec.left) {
             rec.left = point.X;
-          else if(point.X > rec.right)
+          } else if(point.X > rec.right) {
             rec.right = point.X;
-          if(point.Y < rec.top)
+          }
+          if(point.Y < rec.top) {
             rec.top = point.Y;
-          else if(point.Y > rec.bottom)
+          } else if(point.Y > rec.bottom) {
             rec.bottom = point.Y;
+          }
         }
       }
     }
+    // short-circuit if all paths are empty
+    if(empty) {
+        return false;
+    }
 
+    // calculate scale and offset
     if(scale == 0)
       scale = 1.0;
     if(margin < 0)
@@ -154,6 +152,7 @@ public:
     setlocale(LC_NUMERIC, "C");
     file.precision(2);
 
+    // dump polygons to svg
     for(const auto &polyinfo: polyInfos) {
       file << " <path d=\"";
       for(const auto &path: polyinfo.paths) {
