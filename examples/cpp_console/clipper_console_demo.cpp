@@ -16,7 +16,6 @@
 #include <vector>
 #include <limits>
 
-using namespace std;
 using namespace ClipperLib;
 
 //---------------------------------------------------------------------------
@@ -30,11 +29,11 @@ class SVGBuilder {
    * @param clr Color value
    * @return string of hex color value
    */
-  static string ColorToHtml(unsigned clr) {
+  static std::string ColorToHtml(unsigned clr) {
     // TODO: fmt
     // return fmt::format("#{:06X}", clr)
-    stringstream ss;
-    ss << '#' << hex << std::setfill('0') << setw(6) << (clr & 0xFFFFFF);
+    std::stringstream ss;
+    ss << '#' << std::hex << std::setfill('0') << std::setw(6) << (clr & 0xFFFFFF);
     return ss.str();
   }
   //------------------------------------------------------------------------------
@@ -90,7 +89,7 @@ public:
     polyInfos.push_back(PolyInfo(poly, style));
   }
 
-  bool SaveToFile(const string& filename, double scale = 1.0, int margin = 10) {
+  bool SaveToFile(const std::string& filename, double scale = 1.0, int margin = 10) {
     // calculate the bounding rectangle
     bool empty = true;
     IntRect rec;
@@ -137,11 +136,11 @@ public:
     cInt offsetX = -rec.left + margin;
     cInt offsetY = -rec.top + margin;
 
-    ofstream file;
+    std::ofstream file;
     file.open(filename);
     if(!file.is_open())
       return false;
-    file.setf(ios::fixed);
+    file.setf(std::ios::fixed);
     file.precision(0);
     // clang-format off
     file << svg_xml_start[0] << ((rec.right - rec.left) + margin * 2) << "px"
@@ -232,14 +231,14 @@ const std::string SVGBuilder::poly_end[] = {
 // Miscellaneous function ...
 //------------------------------------------------------------------------------
 
-bool SaveToFile(const string& filename, const Paths& ppg, double scale = 1.0, unsigned decimal_places = 0) {
-  ofstream ofs(filename);
+bool SaveToFile(const std::string& filename, const Paths& ppg, double scale = 1.0, unsigned decimal_places = 0) {
+  std::ofstream ofs(filename);
   if(!ofs)
     return false;
 
   if(decimal_places > 8)
     decimal_places = 8;
-  ofs << setprecision(decimal_places) << std::fixed;
+  ofs << std::setprecision(decimal_places) << std::fixed;
 
   Path pg;
   for(const auto &i: ppg) {
@@ -264,16 +263,16 @@ bool SaveToFile(const string& filename, const Paths& ppg, double scale = 1.0, un
  * @param scale
  * @return true if file processed, false otherwise
  */
-bool LoadFromFile(Paths& ppg, const string& filename, double scale) {
+bool LoadFromFile(Paths& ppg, const std::string& filename, double scale) {
 
   ppg.clear();
-  ifstream ifs(filename);
+  std::ifstream ifs(filename);
   if(!ifs)
     return false;
-  string line;
+  std::string line;
   Path   pg;
   while(std::getline(ifs, line)) {
-    stringstream ss(line);
+    std::stringstream ss(line);
     double X = 0.0, Y = 0.0;
     if(!(ss >> X)) {
       // ie blank lines => flag start of next polygon
@@ -355,7 +354,7 @@ int main(int argc, char* argv[]) {
       loop_cnt = strtol(argv[2], &dummy, 10);
     if(loop_cnt == 0)
       loop_cnt = 1000;
-    cout << "\nPerforming " << loop_cnt << " random intersection operations ... ";
+    std::cout << "\nPerforming " << loop_cnt << " random intersection operations ... ";
     srand((int)time(nullptr));
     int     error_cnt = 0;
     Paths   subject, clip, solution;
@@ -373,8 +372,8 @@ int main(int argc, char* argv[]) {
     }
     double time_elapsed = double(clock() - time_start) / CLOCKS_PER_SEC;
 
-    cout << "\nFinished in " << time_elapsed << " secs with ";
-    cout << error_cnt << " errors.\n\n";
+    std::cout << "\nFinished in " << time_elapsed << " secs with ";
+    std::cout << error_cnt << " errors.\n\n";
     // let's save the very last result ...
     SaveToFile("Subject.txt", subject);
     SaveToFile("Clip.txt", clip);
@@ -400,7 +399,7 @@ int main(int argc, char* argv[]) {
 
   // print help message
   if(argc < 3) {
-    cout << "\nUsage:\n"
+    std::cout << "\nUsage:\n"
          << "  clipper_console_demo S_FILE C_FILE CT [S_FILL C_FILL] [PRECISION] [SVG_SCALE]\n"
          << "or\n"
          << "  clipper_console_demo --benchmark [LOOP_COUNT]\n\n"
@@ -441,16 +440,16 @@ int main(int argc, char* argv[]) {
   Paths subject, clip;
 
   if(!LoadFromFile(subject, argv[1], scale)) {
-    cerr << "\nCan't open the file " << argv[1] << " or the file format is invalid.\n";
+    std::cerr << "\nCan't open the file " << argv[1] << " or the file format is invalid.\n";
     return 1;
   }
   if(!LoadFromFile(clip, argv[2], scale)) {
-    cerr << "\nCan't open the file " << argv[2] << " or the file format is invalid.\n";
+    std::cerr << "\nCan't open the file " << argv[2] << " or the file format is invalid.\n";
     return 1;
   }
 
   ClipType     clipType    = ClipType::Intersection;
-  const string sClipType[] = {"INTERSECTION", "UNION", "DIFFERENCE", "XOR"};
+  const std::string sClipType[] = {"INTERSECTION", "UNION", "DIFFERENCE", "XOR"};
 
   if(argc > 3) {
     if(ASCII_icompare(argv[3], "XOR"))
@@ -477,11 +476,11 @@ int main(int argc, char* argv[]) {
   Paths solution;
 
   if(!c.Execute(clipType, solution, subj_pft, clip_pft)) {
-    cout << (sClipType[static_cast<int>(clipType)] + " failed!\n\n");
+    std::cout << (sClipType[static_cast<int>(clipType)] + " failed!\n\n");
     return 1;
   }
 
-  cout << "\nFinished!\n\n";
+  std::cout << "\nFinished!\n\n";
   SaveToFile("solution.txt", solution, scale);
 
   // let's see the result too ...
