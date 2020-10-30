@@ -98,7 +98,7 @@ struct TEdge {
 struct IntersectNode {
   TEdge*   Edge1; //! first edge
   TEdge*   Edge2; //! second edge
-  IntPoint Pt;    //! intersection point
+  IntPoint Point; //! intersection point
 };
 
 /**
@@ -124,7 +124,7 @@ struct OutRec {
   bool      IsHole;     //! is hole
   bool      IsOpen;     //! is path open
   OutRec*   FirstLeft;  //! FIXME: (doc) see comments in clipper.pas
-  PolyNode* PolyNd;     //! polynode
+  PolyNode* Polynode;   //! polynode
   OutPt*    Pts;        //! points
   OutPt*    BottomPt;   //! Bottom point
 };
@@ -226,12 +226,14 @@ PolyNode* PolyNode::GetNext() const {
 //------------------------------------------------------------------------------
 
 PolyNode* PolyNode::GetNextSiblingUp() const {
-  if(!Parent)  // protects against PolyTree.GetNextSiblingUp()
+  if(!Parent) {
+    // protects against PolyTree.GetNextSiblingUp()
     return nullptr;
-  else if(Index == Parent->Childs.size() - 1)
+  } else if(Index == Parent->Childs.size() - 1) {
     return Parent->GetNextSiblingUp();
-  else
+  } else {
     return Parent->Childs[Index + 1];
+  }
 }
 //------------------------------------------------------------------------------
 
@@ -592,10 +594,11 @@ inline double GetDx(const IntPoint pt1, const IntPoint pt2) {
 
 inline void SetDx(TEdge& e) {
   cInt dy = (e.Top.Y - e.Bot.Y);
-  if(dy == 0)
+  if(dy == 0) {
     e.Dx = HORIZONTAL;
-  else
+  } else {
     e.Dx = (double)(e.Top.X - e.Bot.X) / dy;
+  }
 }
 //---------------------------------------------------------------------------
 
@@ -630,17 +633,17 @@ void IntersectPoint(const TEdge& Edge1, const TEdge& Edge2, IntPoint& ip) {
     return;
   } else if(Edge1.Dx == 0) {
     ip.X = Edge1.Bot.X;
-    if(IsHorizontal(Edge2))
+    if(IsHorizontal(Edge2)) {
       ip.Y = Edge2.Bot.Y;
-    else {
+    } else {
       b2   = Edge2.Bot.Y - (Edge2.Bot.X / Edge2.Dx);
       ip.Y = Round(ip.X / Edge2.Dx + b2);
     }
   } else if(Edge2.Dx == 0) {
     ip.X = Edge2.Bot.X;
-    if(IsHorizontal(Edge1))
+    if(IsHorizontal(Edge1)) {
       ip.Y = Edge1.Bot.Y;
-    else {
+    } else {
       b1   = Edge1.Bot.Y - (Edge1.Bot.X / Edge1.Dx);
       ip.Y = Round(ip.X / Edge1.Dx + b1);
     }
@@ -649,30 +652,34 @@ void IntersectPoint(const TEdge& Edge1, const TEdge& Edge2, IntPoint& ip) {
     b2       = Edge2.Bot.X - Edge2.Bot.Y * Edge2.Dx;
     double q = (b2 - b1) / (Edge1.Dx - Edge2.Dx);
     ip.Y     = Round(q);
-    if(std::fabs(Edge1.Dx) < std::fabs(Edge2.Dx))
+    if(std::fabs(Edge1.Dx) < std::fabs(Edge2.Dx)) {
       ip.X = Round(Edge1.Dx * q + b1);
-    else
+    } else {
       ip.X = Round(Edge2.Dx * q + b2);
+    }
   }
 
   if(ip.Y < Edge1.Top.Y || ip.Y < Edge2.Top.Y) {
-    if(Edge1.Top.Y > Edge2.Top.Y)
+    if(Edge1.Top.Y > Edge2.Top.Y) {
       ip.Y = Edge1.Top.Y;
-    else
+    } else {
       ip.Y = Edge2.Top.Y;
-    if(std::fabs(Edge1.Dx) < std::fabs(Edge2.Dx))
+    }
+    if(std::fabs(Edge1.Dx) < std::fabs(Edge2.Dx)) {
       ip.X = TopX(Edge1, ip.Y);
-    else
+    } else {
       ip.X = TopX(Edge2, ip.Y);
+    }
   }
   // finally, don't allow 'ip' to be BELOW curr.Y (ie bottom of scanbeam) ...
   if(ip.Y > Edge1.Curr.Y) {
     ip.Y = Edge1.Curr.Y;
     // use the more vertical edge to derive X ...
-    if(std::fabs(Edge1.Dx) > std::fabs(Edge2.Dx))
+    if(std::fabs(Edge1.Dx) > std::fabs(Edge2.Dx)) {
       ip.X = TopX(Edge2, ip.Y);
-    else
+    } else {
       ip.X = TopX(Edge1, ip.Y);
+    }
   }
 }
 //------------------------------------------------------------------------------
@@ -1361,7 +1368,7 @@ OutRec* ClipperBase::CreateOutRec() {
   result->FirstLeft = nullptr;
   result->Pts       = nullptr;
   result->BottomPt  = nullptr;
-  result->PolyNd    = nullptr;
+  result->Polynode  = nullptr;
   m_PolyOuts.push_back(result);
   result->Index = (int)m_PolyOuts.size() - 1;
   return result;
@@ -2743,7 +2750,7 @@ void Clipper::BuildIntersectList(const cInt topY) {
         auto *newNode  = new IntersectNode;
         newNode->Edge1 = e;
         newNode->Edge2 = eNext;
-        newNode->Pt    = Pt;
+        newNode->Point = Pt;
         m_IntersectList.push_back(newNode);
 
         SwapPositionsInSEL(e, eNext);
@@ -2764,7 +2771,7 @@ void Clipper::BuildIntersectList(const cInt topY) {
 void Clipper::ProcessIntersectList() {
   for(auto *iNode : m_IntersectList) {
     {
-      IntersectEdges(iNode->Edge1, iNode->Edge2, iNode->Pt);
+      IntersectEdges(iNode->Edge1, iNode->Edge2, iNode->Point);
       SwapPositionsInAEL(iNode->Edge1, iNode->Edge2);
     }
     delete iNode;
@@ -2774,7 +2781,7 @@ void Clipper::ProcessIntersectList() {
 //------------------------------------------------------------------------------
 
 bool IntersectListSort(IntersectNode* node1, IntersectNode* node2) {
-  return node2->Pt.Y < node1->Pt.Y;
+  return node2->Point.Y < node1->Point.Y;
 }
 //------------------------------------------------------------------------------
 
@@ -2985,9 +2992,9 @@ void Clipper::FixupOutPolygon(OutRec& outrec) {
       pp->Next->Prev = pp->Prev;
       pp             = pp->Prev;
       delete tmp;
-    } else if(pp == lastOK)
+    } else if(pp == lastOK) {
       break;
-    else {
+    } else {
       if(!lastOK)
         lastOK = pp;
       pp = pp->Next;
@@ -3000,8 +3007,10 @@ void Clipper::FixupOutPolygon(OutRec& outrec) {
 int PointCount(OutPt* Pts) {
   if(!Pts)
     return 0;
+
   int    result = 0;
   OutPt* p      = Pts;
+
   do {
     result++;
     p = p->Next;
@@ -3043,9 +3052,9 @@ void Clipper::BuildResult2(PolyTree& polytree) {
     auto *pn = new PolyNode();
     // nb: polytree takes ownership of all the PolyNodes
     polytree.AllNodes.push_back(pn);
-    outRec->PolyNd = pn;
-    pn->Parent     = nullptr;
-    pn->Index      = 0;
+    outRec->Polynode = pn;
+    pn->Parent       = nullptr;
+    pn->Index        = 0;
     pn->Contour.reserve(cnt);
     OutPt* op = outRec->Pts->Prev;
     for(int j = 0; j < cnt; j++) {
@@ -3057,15 +3066,15 @@ void Clipper::BuildResult2(PolyTree& polytree) {
   // fixup PolyNode links etc ...
   polytree.Childs.reserve(m_PolyOuts.size());
   for(auto *outRec : m_PolyOuts) {
-    if(!outRec->PolyNd)
+    if(!outRec->Polynode)
       continue;
     if(outRec->IsOpen) {
-      outRec->PolyNd->m_IsOpen = true;
-      polytree.AddChild(*outRec->PolyNd);
-    } else if(outRec->FirstLeft && outRec->FirstLeft->PolyNd)
-      outRec->FirstLeft->PolyNd->AddChild(*outRec->PolyNd);
+      outRec->Polynode->m_IsOpen = true;
+      polytree.AddChild(*outRec->Polynode);
+    } else if(outRec->FirstLeft && outRec->FirstLeft->Polynode)
+      outRec->FirstLeft->Polynode->AddChild(*outRec->Polynode);
     else
-      polytree.AddChild(*outRec->PolyNd);
+      polytree.AddChild(*outRec->Polynode);
   }
 }
 //------------------------------------------------------------------------------
@@ -3080,21 +3089,23 @@ void SwapIntersectNodes(IntersectNode& int1, IntersectNode& int2) {
   IntersectNode inode = int1;  // gets a copy of Int1
   int1.Edge1          = int2.Edge1;
   int1.Edge2          = int2.Edge2;
-  int1.Pt             = int2.Pt;
+  int1.Point          = int2.Point;
   int2.Edge1          = inode.Edge1;
   int2.Edge2          = inode.Edge2;
-  int2.Pt             = inode.Pt;
+  int2.Point          = inode.Point;
 }
 //------------------------------------------------------------------------------
 
 inline bool E2InsertsBeforeE1(const TEdge& e1, const TEdge& e2) {
   if(e2.Curr.X == e1.Curr.X) {
-    if(e2.Top.Y > e1.Top.Y)
+    if(e2.Top.Y > e1.Top.Y) {
       return e2.Top.X < TopX(e1, e2.Top.Y);
-    else
+    } else {
       return e1.Top.X > TopX(e2, e1.Top.Y);
-  } else
+    }
+  } else {
     return e2.Curr.X < e1.Curr.X;
+  }
 }
 //------------------------------------------------------------------------------
 
@@ -3461,14 +3472,15 @@ void Clipper::JoinCommonEdges() {
     // get the polygon fragment with the correct hole state (FirstLeft)
     // before calling JoinPoints() ...
     OutRec* holeStateRec;
-    if(outRec1 == outRec2)
+    if(outRec1 == outRec2) {
       holeStateRec = outRec1;
-    else if(OutRec1RightOfOutRec2(outRec1, outRec2))
+    } else if(OutRec1RightOfOutRec2(outRec1, outRec2)) {
       holeStateRec = outRec2;
-    else if(OutRec1RightOfOutRec2(outRec2, outRec1))
+    } else if(OutRec1RightOfOutRec2(outRec2, outRec1)) {
       holeStateRec = outRec1;
-    else
+    } else {
       holeStateRec = GetLowermostRec(outRec1, outRec2);
+    }
 
     if(!JoinPoints(join, outRec1, outRec2))
       continue;
@@ -3694,8 +3706,9 @@ void ClipperOffset::Execute(PolyTree& solution, double delta) {
       solution.Childs[0]->Parent = outerNode->Parent;
       for(auto* child: outerNode->Childs)
         solution.AddChild(*child);
-    } else
+    } else {
       solution.Clear();
+    }
   }
 }
 //------------------------------------------------------------------------------
@@ -4148,7 +4161,7 @@ void Minkowski(const Path& poly, const Path& path, Paths& solution, bool isSum, 
   Paths  pp;
   pp.reserve(pathCnt);
 
-  if(isSum)
+  if(isSum) {
     for(const auto &point1: path) {
       Path p;
       p.reserve(polyCnt);
@@ -4156,7 +4169,7 @@ void Minkowski(const Path& poly, const Path& path, Paths& solution, bool isSum, 
         p.push_back(IntPoint(point1.X + point2.X, point1.Y + point2.Y));
       pp.push_back(p);
     }
-  else
+  } else {
     for(const auto &point1: path) {
       Path p;
       p.reserve(polyCnt);
@@ -4164,10 +4177,11 @@ void Minkowski(const Path& poly, const Path& path, Paths& solution, bool isSum, 
         p.push_back(IntPoint(point1.X - point2.X, point1.Y - point2.Y));
       pp.push_back(p);
     }
+  }
 
   solution.clear();
   solution.reserve((pathCnt + delta) * (polyCnt + 1));
-  for(size_t i = 0; i < pathCnt - 1 + delta; ++i)
+  for(size_t i = 0; i < pathCnt - 1 + delta; ++i) {
     for(size_t j = 0; j < polyCnt; ++j) {
       Path quad;
       quad.reserve(4);
@@ -4179,6 +4193,7 @@ void Minkowski(const Path& poly, const Path& path, Paths& solution, bool isSum, 
         ReversePath(quad);
       solution.push_back(quad);
     }
+  }
 }
 //------------------------------------------------------------------------------
 
