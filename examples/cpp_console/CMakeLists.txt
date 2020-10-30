@@ -5,6 +5,7 @@ add_executable(${PROJECT_NAME} clipper_console_demo.cpp)
 target_link_libraries(${PROJECT_NAME}
   PRIVATE
     clipper::clipper
+    fmt::fmt
 )
 
 install(TARGETS ${PROJECT_NAME}

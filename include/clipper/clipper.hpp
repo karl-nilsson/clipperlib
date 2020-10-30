@@ -61,11 +61,13 @@
 #include <cstring>
 #include <functional>
 #include <list>
-#include <ostream>
 #include <queue>
 #include <set>
 #include <stdexcept>
 #include <vector>
+#include <fmt/core.h>
+#include <fmt/format.h>
+#include <fmt/ranges.h>
 
 namespace ClipperLib {
 
@@ -160,6 +162,8 @@ struct IntPoint {
    */
   friend inline bool operator!=(const IntPoint& a, const IntPoint& b) noexcept { return a.X != b.X || a.Y != b.Y; }
 };
+
+
 //------------------------------------------------------------------------------
 
 //! @typedef std::vector of IntPoints
@@ -188,10 +192,6 @@ inline Paths& operator<<(Paths& polys, const Path& p) {
   polys.push_back(p);
   return polys;
 }
-
-std::ostream& operator<<(std::ostream& s, const IntPoint& p);
-std::ostream& operator<<(std::ostream& s, const Path& p);
-std::ostream& operator<<(std::ostream& s, const Paths& p);
 
 /**
  * @brief The DoublePoint struct
@@ -710,3 +710,46 @@ private:
 //------------------------------------------------------------------------------
 
 }  // namespace ClipperLib
+
+
+
+// formatter for ClipType enum
+template<> struct fmt::formatter<ClipperLib::ClipType>: formatter<string_view> {
+  template <typename FormatContext>
+  auto format(ClipperLib::ClipType c, FormatContext& ctx) {
+    string_view name = "unknown";
+    switch(c) {
+      case ClipperLib::ClipType::Intersection: name = "INTERSECTION"; break;
+      case ClipperLib::ClipType::Union:        name = "UNION"; break;
+      case ClipperLib::ClipType::Difference:   name = "DIFFERENCE"; break;
+      case ClipperLib::ClipType::XOR:          name = "XOR"; break;
+    }
+    return formatter<string_view>::format(name, ctx);
+  }
+};
+
+
+// formatter for IntPoint
+template <>
+struct fmt::formatter<ClipperLib::IntPoint> {
+
+  constexpr auto parse(format_parse_context& ctx) {
+    return ctx.begin();
+  }
+
+  template <typename FormatContext>
+  auto format(const ClipperLib::IntPoint& p, FormatContext& ctx) {
+# ifdef use_xyz
+    return format_to(
+          ctx.out(),
+          "({}, {}, {})",
+          p.X, p.Y, p.Z);
+#else
+    return format_to(
+          ctx.out(),
+          "({}, {})",
+          p.X, p.Y);
+#endif
+  }
+};
+

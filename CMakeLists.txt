@@ -20,8 +20,6 @@ project(clipper
 
 # extra scripts
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
-include(GNUInstallDirs)
-
 
 # disable tests if this is a submodule
 if(NOT IS_SUBPROJECT)
@@ -43,6 +41,9 @@ set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/build)
 set(RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
+# add external dependencies
+add_subdirectory(external)
+
 add_library(${PROJECT_NAME})
 # create clipper::clipper alias
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
@@ -54,14 +55,17 @@ target_sources(${PROJECT_NAME}
     src/clipper.cpp
 )
 
+# link libraries
+target_link_libraries(${PROJECT_NAME}
+  PUBLIC
+    fmt::fmt-header-only
+)
+
 target_include_directories(${PROJECT_NAME}
   PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-
-# add external dependencies
-# add_subdirectory(external)
 
 # tests switch
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND CLIPPER_BUILD_TESTING)
@@ -79,6 +83,7 @@ endif()
 
 # install target
 if(CLIPPER_ENABLE_INSTALL)
+  include(GNUInstallDirs)
 
   include(CMakePackageConfigHelpers)
 
@@ -97,7 +102,6 @@ if(CLIPPER_ENABLE_INSTALL)
   )
 
   # create polyclippingConfigVersion.cmake
-
   write_basic_package_version_file(
     "${PROJECT_NAME}ConfigVersion.cmake"
     VERSION ${PROJECT_VERSION}
@@ -118,6 +122,7 @@ if(CLIPPER_ENABLE_INSTALL)
     NAMESPACE ${PROJECT_NAME}::
     DESTINATION ${INSTALL_CONFIGDIR}
   )
+
 
   # install scripts
   install(

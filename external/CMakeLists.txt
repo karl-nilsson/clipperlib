@@ -1,13 +1,13 @@
 include(FetchContent)
 
-# only include doctest if building tests
-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
-  # doctest
-  FetchContent_Declare(doctest
-    GIT_REPOSITORY https://github.com/onqtam/doctest
-    GIT_TAG 2.4.0
-  )
-  # disable doctests' internal tests
-  set(DOCTEST_WITH_TESTS OFF CACHE STRING "Omit doctest tests" FORCE)
-  FetchContent_MakeAvailable(doctest)
+# include fmt
+FetchContent_Declare(fmt
+  GIT_REPOSITORY https://github.com/fmtlib/fmt
+  GIT_TAG 7.1.1
+)
+FetchContent_MakeAvailable(fmt)
+
+# prevent fmt building library, use header-only
+if(IS_DIRECTORY "${fmt_SOURCE_DIR}")
+    set_property(DIRECTORY ${fmt_SOURCE_DIR} PROPERTY EXCLUDE_FROM_ALL YES)
 endif()
