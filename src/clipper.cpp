@@ -187,19 +187,19 @@ void PolyTree::Clear() {
     delete i;
   }
   AllNodes.resize(0);
-  Childs.resize(0);
+  Children.resize(0);
 }
 //------------------------------------------------------------------------------
 
 PolyNode* PolyTree::GetFirst() const {
-  return Childs.empty() ? nullptr : Childs[0];
+  return Children.empty() ? nullptr : Children[0];
 }
 //------------------------------------------------------------------------------
 
 int PolyTree::Total() const {
   int result = (int)AllNodes.size();
   // with negative offsets, ignore the hidden outer polygon ...
-  if(result > 0 && Childs[0] != AllNodes[0])
+  if(result > 0 && Children[0] != AllNodes[0])
     result--;
   return result;
 }
@@ -210,16 +210,16 @@ int PolyTree::Total() const {
 
 
 void PolyNode::AddChild(PolyNode& child) {
-  auto cnt = (unsigned)Childs.size();
-  Childs.push_back(&child);
+  auto cnt = (unsigned)Children.size();
+  Children.push_back(&child);
   child.Parent = this;
   child.Index  = cnt;
 }
 //------------------------------------------------------------------------------
 
 PolyNode* PolyNode::GetNext() const {
-  if(!Childs.empty())
-    return Childs[0];
+  if(!Children.empty())
+    return Children[0];
   else
     return GetNextSiblingUp();
 }
@@ -229,10 +229,10 @@ PolyNode* PolyNode::GetNextSiblingUp() const {
   if(!Parent) {
     // protects against PolyTree.GetNextSiblingUp()
     return nullptr;
-  } else if(Index == Parent->Childs.size() - 1) {
+  } else if(Index == Parent->Children.size() - 1) {
     return Parent->GetNextSiblingUp();
   } else {
-    return Parent->Childs[Index + 1];
+    return Parent->Children[Index + 1];
   }
 }
 //------------------------------------------------------------------------------
@@ -431,6 +431,12 @@ double Area(const OutRec& outRec) {
 }
 //------------------------------------------------------------------------------
 
+/**
+ * @brief PointIsVertex Determine whether point is a vertex
+ * @param Pt
+ * @param pp
+ * @return
+ */
 bool PointIsVertex(const IntPoint& Pt, OutPt* pp) {
   OutPt* pp2 = pp;
   do {
@@ -442,12 +448,6 @@ bool PointIsVertex(const IntPoint& Pt, OutPt* pp) {
 }
 //------------------------------------------------------------------------------
 
-/**
- * @brief Determine whether a point lies inside a polygon
- * @param pt Point
- * @param op Polygon
- * @return 1 if true, 0 if false, -1 if on boundary
- */
 int PointInPolygon(const IntPoint& pt, const Path& path) {
   // returns 0 if false, +1 if true, -1 if pt ON polygon boundary
   int    result = 0;
@@ -465,9 +465,9 @@ int PointInPolygon(const IntPoint& pt, const Path& path) {
     }
     if((ip.Y < pt.Y) != (ipNext.Y < pt.Y)) {
       if(ip.X >= pt.X) {
-        if(ipNext.X > pt.X)
+        if(ipNext.X > pt.X) {
           result = 1 - result;
-        else {
+        } else {
           double d = (double)(ip.X - pt.X) * (ipNext.Y - pt.Y) - (double)(ipNext.X - pt.X) * (ip.Y - pt.Y);
           if(!d)
             return -1;
@@ -552,6 +552,13 @@ bool Poly2ContainsPoly1(OutPt* OutPt1, OutPt* OutPt2) {
 }
 //----------------------------------------------------------------------
 
+/**
+ * @brief SlopesEqual Compare slopes of two edges
+ * @param e1 First edge
+ * @param e2 Second edge
+ * @param UseFullInt64Range
+ * @return Whether specified edges have equal slopes
+ */
 bool SlopesEqual(const TEdge& e1, const TEdge& e2, bool UseFullInt64Range) {
 #ifndef use_int32
   if(UseFullInt64Range)
@@ -572,6 +579,15 @@ bool SlopesEqual(const IntPoint pt1, const IntPoint pt2, const IntPoint pt3, boo
 }
 //------------------------------------------------------------------------------
 
+/**
+ * @brief SlopesEqual Compare slopes of two edges, via points
+ * @param pt1 Edge 1, point 1
+ * @param pt2 Edge 1, point 2
+ * @param pt3 Edge 2, point 1
+ * @param pt4 Edge 2, point 2
+ * @param UseFullInt64Range
+ * @return
+ */
 bool SlopesEqual(const IntPoint pt1, const IntPoint pt2, const IntPoint pt3, const IntPoint pt4, bool UseFullInt64Range) {
 #ifndef use_int32
   if(UseFullInt64Range)
@@ -3064,7 +3080,7 @@ void Clipper::BuildResult2(PolyTree& polytree) {
   }
 
   // fixup PolyNode links etc ...
-  polytree.Childs.reserve(m_PolyOuts.size());
+  polytree.Children.reserve(m_PolyOuts.size());
   for(auto *outRec : m_PolyOuts) {
     if(!outRec->Polynode)
       continue;
@@ -3577,10 +3593,10 @@ ClipperOffset::~ClipperOffset() {
 //------------------------------------------------------------------------------
 
 void ClipperOffset::Clear() {
-  for(auto* node: m_polyNodes.Childs)
+  for(auto* node: m_polyNodes.Children)
       delete node;
 
-  m_polyNodes.Childs.clear();
+  m_polyNodes.Children.clear();
   m_lowest.X = -1;
 }
 //------------------------------------------------------------------------------
@@ -3620,7 +3636,7 @@ void ClipperOffset::AddPath(const Path& path, JoinType joinType, EndType endType
   if(m_lowest.X < 0)
     m_lowest = IntPoint(m_polyNodes.ChildCount() - 1, k);
   else {
-    IntPoint ip = m_polyNodes.Childs[(int)m_lowest.X]->Contour[(int)m_lowest.Y];
+    IntPoint ip = m_polyNodes.Children[(int)m_lowest.X]->Contour[(int)m_lowest.Y];
     if(newNode->Contour[k].Y > ip.Y || (newNode->Contour[k].Y == ip.Y && newNode->Contour[k].X < ip.X))
       m_lowest = IntPoint(m_polyNodes.ChildCount() - 1, k);
   }
@@ -3636,13 +3652,13 @@ void ClipperOffset::AddPaths(const Paths& paths, JoinType joinType, EndType endT
 void ClipperOffset::FixOrientations() {
   // fixup orientations of all closed paths if the orientation of the
   // closed path with the lowermost vertex is wrong ...
-  if(m_lowest.X >= 0 && !Orientation(m_polyNodes.Childs[(int)m_lowest.X]->Contour)) {
-    for(auto *node: m_polyNodes.Childs) {
+  if(m_lowest.X >= 0 && !Orientation(m_polyNodes.Children[(int)m_lowest.X]->Contour)) {
+    for(auto *node: m_polyNodes.Children) {
       if(node->m_endtype == EndType::ClosedPolygon || (node->m_endtype == EndType::ClosedLine && Orientation(node->Contour)))
         ReversePath(node->Contour);
     }
   } else {
-    for(auto *node: m_polyNodes.Childs) {
+    for(auto *node: m_polyNodes.Children) {
       if(node->m_endtype == EndType::ClosedLine && !Orientation(node->Contour))
         ReversePath(node->Contour);
     }
@@ -3699,12 +3715,12 @@ void ClipperOffset::Execute(PolyTree& solution, double delta) {
     clpr.ReverseSolution(true);
     clpr.Execute(ClipType::Union, solution, PolyFillType::Negative, PolyFillType::Negative);
     // remove the outer PolyNode rectangle ...
-    if(solution.ChildCount() == 1 && solution.Childs[0]->ChildCount() > 0) {
-      PolyNode* outerNode = solution.Childs[0];
-      solution.Childs.reserve(outerNode->ChildCount());
-      solution.Childs[0]         = outerNode->Childs[0];
-      solution.Childs[0]->Parent = outerNode->Parent;
-      for(auto* child: outerNode->Childs)
+    if(solution.ChildCount() == 1 && solution.Children[0]->ChildCount() > 0) {
+      PolyNode* outerNode = solution.Children[0];
+      solution.Children.reserve(outerNode->ChildCount());
+      solution.Children[0]         = outerNode->Children[0];
+      solution.Children[0]->Parent = outerNode->Parent;
+      for(auto* child: outerNode->Children)
         solution.AddChild(*child);
     } else {
       solution.Clear();
@@ -3720,7 +3736,7 @@ void ClipperOffset::DoOffset(double delta) {
   // if Zero offset, just copy any CLOSED polygons to m_p and return ...
   if(NEAR_ZERO(delta)) {
     m_destPolys.reserve(m_polyNodes.ChildCount());
-    for(auto *node: m_polyNodes.Childs) {
+    for(auto *node: m_polyNodes.Children) {
       if(node->m_endtype == EndType::ClosedPolygon)
         m_destPolys.push_back(node->Contour);
     }
@@ -3751,7 +3767,7 @@ void ClipperOffset::DoOffset(double delta) {
     m_sin = -m_sin;
 
   m_destPolys.reserve(m_polyNodes.ChildCount() * 2);
-  for(auto *node: m_polyNodes.Childs) {
+  for(auto *node: m_polyNodes.Children) {
     m_srcPoly = node->Contour;
 
     int len = (int)m_srcPoly.size();
@@ -4253,7 +4269,7 @@ void AddPolyNodeToPaths(const PolyNode& polynode, NodeType nodetype, Paths& path
   if(!polynode.Contour.empty() && match)
     paths.push_back(polynode.Contour);
 
-  for(const auto *node: polynode.Childs)
+  for(const auto *node: polynode.Children)
     AddPolyNodeToPaths(*node, nodetype, paths);
 }
 //------------------------------------------------------------------------------
@@ -4276,7 +4292,7 @@ void OpenPathsFromPolyTree(PolyTree& polytree, Paths& paths) {
   paths.resize(0);
   paths.reserve(polytree.Total());
   // Open paths are top level only, so ...
-  for(const auto *node: polytree.Childs) {
+  for(const auto *node: polytree.Children) {
       if(node->IsOpen())
         paths.push_back(node->Contour);
   }

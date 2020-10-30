@@ -73,18 +73,24 @@ namespace ClipperLib {
  * @brief ClipType enum, boolean operations
  */
 enum class ClipType {
-  Intersection,  //! Intersection
-  Union,         //! Union
-  Difference,    //! Difference
-  XOR            //! Xor (exclusive or)
+  //! Intersection
+  Intersection,
+  //! Union
+  Union,
+  //! Difference
+  Difference,
+  //! XOR (exclusive or)
+  XOR
 };
 
 /**
  * @brief The PolyType enum
  */
 enum class PolyType {
-  Subject,  //! TODO: document
-  Clip      //! TODO: document
+  //! Subject polygon
+  Subject,
+  //! Object polygon
+  Clip
 };
 
 /**
@@ -107,13 +113,13 @@ typedef int       cInt;
 static cInt const loRange = 0x7FFF;
 static cInt const hiRange = 0x7FFF;
 #else
-//! @typedef
+//! @typedef 64b signed int
 typedef signed long long cInt;
 static cInt const        loRange = 0x3FFFFFFF;
 static cInt const        hiRange = 0x3FFFFFFFFFFFFFFFLL;
 //! @typedef used by the Int128 class
 typedef signed long long long64;
-//! @typedef
+//! @typedef 64b unsigned long
 typedef unsigned long long ulong64;
 
 #endif
@@ -122,24 +128,27 @@ typedef unsigned long long ulong64;
  * @brief IntPoint struct, a point with integer values
  */
 struct IntPoint {
-  cInt X;  //! X value
-  cInt Y;  //! Y value
+  //! X coordinate
+  cInt X;
+  //! Y coordinate
+  cInt Y;
 #ifdef use_xyz
-  cInt Z;  //! Z value
+  //! Z coordinate
+  cInt Z;
 
   /**
    * @brief IntPoint constructor
-   * @param x
-   * @param y
-   * @param z
+   * @param x coordinate
+   * @param y coordinate
+   * @param z coordinate
    */
   IntPoint(cInt x = 0, cInt y = 0, cInt z = 0) : X(x), Y(y), Z(z){};
 #else
 
   /**
    * @brief IntPoint constructor
-   * @param X value
-   * @param Y value
+   * @param x coordinate
+   * @param y coordinate
    */
   IntPoint(cInt x = 0, cInt y = 0) : X(x), Y(y){}
 #endif
@@ -169,8 +178,8 @@ typedef std::vector<Path> Paths;
 
 /**
  * @brief Append IntPoint to Path
- * @param Path
- * @param Point
+ * @param Path target path
+ * @param Point target point
  * @return amended Path
  */
 inline Path& operator<<(Path& poly, const IntPoint& p) {
@@ -181,7 +190,7 @@ inline Path& operator<<(Path& poly, const IntPoint& p) {
 /**
  * @brief Append Path to (vector of) Paths
  * @param Paths target vector
- * @param Path
+ * @param Path target path
  * @return amended Paths
  */
 inline Paths& operator<<(Paths& polys, const Path& p) {
@@ -199,19 +208,21 @@ std::ostream& operator<<(std::ostream& s, const Paths& p);
  * 2 Dimensional point using double values
  */
 struct DoublePoint {
-  double X;  //! X value
-  double Y;  //! Y value
+  //! X coordinate
+  double X;
+  //! Y coordinate
+  double Y;
 
   /**
    * @brief DoublePoint constructor
-   * @param X value
-   * @param Y value
+   * @param x coordinate
+   * @param y coordinate
    */
   DoublePoint(double x = 0, double y = 0) : X(x), Y(y) {}
 
   /**
    * @brief DoublePoint constructor
-   * @param point to copy
+   * @param IntPoint to copy
    */
   DoublePoint(const IntPoint& ip) : X((double)ip.X), Y((double)ip.Y) {}
 };
@@ -229,9 +240,12 @@ typedef void (*ZFillCallback)(IntPoint& e1bot, IntPoint& e1top, IntPoint& e2bot,
  * http://www.angusj.com/delphi/clipper/documentation/Docs/Units/ClipperLib/Types/JoinType.htm
  */
 enum class JoinType {
-  Square,  //! Square the ends
-  Round,   //! Round the end
-  Miter    //! Miter
+  //! Square the ends
+  Square,
+  //! Round the end
+  Round,
+  //! Miter
+  Miter
 };
 
 /**
@@ -241,11 +255,16 @@ enum class JoinType {
  * http://www.angusj.com/delphi/clipper/documentation/Docs/Units/ClipperLib/Types/EndType.htm
  */
 enum class EndType {
-  ClosedPolygon,  //!
-  ClosedLine,     //!
-  OpenButt,       //!
-  OpenSquare,     //!
-  OpenRound       //!
+  //!
+  ClosedPolygon,
+  //!
+  ClosedLine,
+  //!
+  OpenButt,
+  //!
+  OpenSquare,
+  //!
+  OpenRound
 };
 
 // forward declaration
@@ -266,7 +285,7 @@ public:
   //! polygon
   Path      Contour;
   //! Child nodes
-  PolyNodes Childs;
+  PolyNodes Children;
   //! Parent node
   PolyNode* Parent{nullptr};
 
@@ -292,14 +311,18 @@ public:
    * @brief ChildCount Get the number of child nodes
    * @return Number of child nodes
    */
-  int  ChildCount() const {return (int)Childs.size();}
+  int  ChildCount() const {return (int)Children.size();}
 
 private:
   // PolyNode& operator =(PolyNode& other);
-  unsigned Index{0};        //! node index in Parent.Childs
-  bool     m_IsOpen{false}; //!
-  JoinType m_jointype;      //!
-  EndType  m_endtype;       //!
+  //! node index in Parent.Children
+  unsigned Index{0};
+  //! whether polynode is open
+  bool     m_IsOpen{false};
+  //! the join type
+  JoinType m_jointype;
+  //! the end type
+  EndType  m_endtype;
 
   /**
    * @brief GetNextSiblingUp
@@ -326,13 +349,13 @@ public:
   ~PolyTree() { Clear(); }
 
   /**
-   * @brief GetFirst Get the first child in the tre
+   * @brief GetFirst Get the first child in the tree
    * @return First child in tree, nullptr if no children
    */
   PolyNode* GetFirst() const;
 
   /**
-   * @brief Clear
+   * @brief Clear remove all nodes from the tree
    */
   void      Clear();
 
@@ -344,8 +367,10 @@ public:
 
 private:
   // PolyTree& operator =(PolyTree& other);
-  PolyNodes AllNodes;   //! list of nodes
-  friend class Clipper; // to access AllNodes
+  //! list of nodes
+  PolyNodes AllNodes;
+  // allow Clipper to access AllNodes
+  friend class Clipper;
 };
 
 /**
@@ -368,8 +393,8 @@ double Area(const Path& poly);
  * See "The Point in Polygon Problem for Arbitrary Polygons" by Hormann & Agathos
  * http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.88.5498&rep=rep1&type=pdf
  *
- * @param Point
- * @param Polygon
+ * @param pt Point
+ * @param op Polygon
  * @return 0 if outside, 1 if inside, and -1 if on boundary
  *
  */
@@ -432,11 +457,12 @@ struct IntRect {
 
 /**
  * @brief The EdgeSide enum
- * private
  */
 enum class EdgeSide {
-  Left  = 1,  //!
-  Right = 2   //!
+  //!
+  Left  = 1,
+  //!
+  Right = 2
 };
 
 // forward declarations (for stuff used internally) ...
