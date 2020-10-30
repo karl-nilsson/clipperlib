@@ -15,7 +15,7 @@
 #include <stdexcept>
 #include <cmath>
 #include <cairo.h>
-#include "clipper.hpp"
+#include <clipper/clipper.hpp>
 #include "cairo_clipper.hpp"
 
 namespace ClipperLib {

@@ -6,7 +6,7 @@
 #include <sstream>
 #pragma hdrstop
 
-#include "clipper.hpp"
+#include <clipper/clipper.hpp>
 #include "cairo.h"
 #include "cairo-win32.h"
 #include "cairo_clipper.hpp"

@@ -15,7 +15,7 @@
 #ifndef CLIPPER_CAIRO_CLIPPER_HPP
 #define CLIPPER_CAIRO_CLIPPER_HPP
 
-#include "clipper.hpp"
+#include <clipper/clipper.hpp>
 
 typedef struct _cairo cairo_t;
 

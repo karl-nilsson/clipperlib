@@ -20,8 +20,6 @@ project(clipper
 
 # extra scripts
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
-include(GNUInstallDirs)
-
 
 # disable tests if this is a submodule
 if(NOT IS_SUBPROJECT)
@@ -46,7 +44,7 @@ set(LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 add_library(${PROJECT_NAME})
 # create clipper::clipper alias
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
-# require C++20 support
+# require C++17 support
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 
 target_sources(${PROJECT_NAME}
@@ -79,6 +77,8 @@ endif()
 
 # install target
 if(CLIPPER_ENABLE_INSTALL)
+
+  include(GNUInstallDirs)
 
   include(CMakePackageConfigHelpers)
 
