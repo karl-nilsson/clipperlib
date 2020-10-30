@@ -26,37 +26,37 @@ using namespace ClipperLib;
 class SVGBuilder {
   /**
    * @brief ColorToHtml Convert color value to HTML hex string
-   * @param clr Color value
+   * @param color Color value
    * @return string of hex color value
    */
-  static std::string ColorToHtml(unsigned clr) {
+  static std::string ColorToHtml(unsigned color) {
     // TODO: fmt
-    // return fmt::format("#{:06X}", clr)
+    // return fmt::format("#{:06X}", color)
     std::stringstream ss;
-    ss << '#' << std::hex << std::setfill('0') << std::setw(6) << (clr & 0xFFFFFF);
+    ss << '#' << std::hex << std::setfill('0') << std::setw(6) << (color & 0xFFFFFF);
     return ss.str();
   }
   //------------------------------------------------------------------------------
 
   /**
    * @brief GetAlphaAsFrac Extract alpha value from color value
-   * @param clr Color value
+   * @param color Color value
    * @return alpha value as float
    */
-  static float GetAlphaAsFrac(unsigned clr) { return ((float)(clr >> 24) / 255); }
+  static float GetAlphaAsFrac(unsigned color) { return ((float)(color >> 24) / 255); }
   //------------------------------------------------------------------------------
 
   class StyleInfo {
   public:
     PolyFillType pft;
-    unsigned     brushClr;
-    unsigned     penClr;
+    unsigned     brushColor;
+    unsigned     penColor;
     double       penWidth;
     bool         showCoords;
 
     StyleInfo() : pft(PolyFillType::NonZero) {
-      brushClr   = 0xFFFFFFCC;
-      penClr     = 0xFF000000;
+      brushColor = 0xFFFFFFCC;
+      penColor   = 0xFF000000;
       penWidth   = 0.8;
       showCoords = false;
     }
@@ -172,11 +172,11 @@ public:
         file << " z";
       }
       // clang-format off
-      file << poly_end[0] << ColorToHtml(polyinfo.si.brushClr)
-           << poly_end[1] << GetAlphaAsFrac(polyinfo.si.brushClr)
+      file << poly_end[0] << ColorToHtml(polyinfo.si.brushColor)
+           << poly_end[1] << GetAlphaAsFrac(polyinfo.si.brushColor)
            << poly_end[2] << (polyinfo.si.pft == PolyFillType::EvenOdd ? "evenodd" : "nonzero")
-           << poly_end[3] << ColorToHtml(polyinfo.si.penClr)
-           << poly_end[4] << GetAlphaAsFrac(polyinfo.si.penClr)
+           << poly_end[3] << ColorToHtml(polyinfo.si.penColor)
+           << poly_end[4] << GetAlphaAsFrac(polyinfo.si.penColor)
            << poly_end[5] << polyinfo.si.penWidth
            << poly_end[6];
       // clang-format on
@@ -381,17 +381,17 @@ int main(int argc, char* argv[]) {
 
     // and see the final clipping op as an image too ...
     SVGBuilder svg;
-    svg.style.penWidth = 0.8;
-    svg.style.pft      = PolyFillType::EvenOdd;
-    svg.style.brushClr = 0x1200009C;
-    svg.style.penClr   = 0xCCD3D3DA;
+    svg.style.penWidth   = 0.8;
+    svg.style.pft        = PolyFillType::EvenOdd;
+    svg.style.brushColor = 0x1200009C;
+    svg.style.penColor   = 0xCCD3D3DA;
     svg.AddPaths(subject);
-    svg.style.brushClr = 0x129C0000;
-    svg.style.penClr   = 0xCCFFA07A;
+    svg.style.brushColor = 0x129C0000;
+    svg.style.penColor   = 0xCCFFA07A;
     svg.AddPaths(clip);
-    svg.style.brushClr = 0x6080ff9C;
-    svg.style.penClr   = 0xFF003300;
-    svg.style.pft      = PolyFillType::NonZero;
+    svg.style.brushColor = 0x6080ff9C;
+    svg.style.penColor   = 0xFF003300;
+    svg.style.pft        = PolyFillType::NonZero;
     svg.AddPaths(solution);
     svg.SaveToFile("solution.svg");
     return 0;
@@ -486,16 +486,16 @@ int main(int argc, char* argv[]) {
   // let's see the result too ...
   SVGBuilder svg;
   svg.style.penWidth = 0.8;
-  svg.style.brushClr = 0x1200009C;
-  svg.style.penClr   = 0xCCD3D3DA;
+  svg.style.brushColor = 0x1200009C;
+  svg.style.penColor   = 0xCCD3D3DA;
   svg.style.pft      = subj_pft;
   svg.AddPaths(subject);
-  svg.style.brushClr = 0x129C0000;
-  svg.style.penClr   = 0xCCFFA07A;
+  svg.style.brushColor = 0x129C0000;
+  svg.style.penColor   = 0xCCFFA07A;
   svg.style.pft      = clip_pft;
   svg.AddPaths(clip);
-  svg.style.brushClr = 0x6080ff9C;
-  svg.style.penClr   = 0xFF003300;
+  svg.style.brushColor = 0x6080ff9C;
+  svg.style.penColor   = 0xFF003300;
   svg.style.pft      = PolyFillType::NonZero;
   svg.AddPaths(solution);
   svg.SaveToFile("solution.svg", svg_scale);
