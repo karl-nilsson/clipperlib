@@ -41,6 +41,9 @@ set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/build)
 set(RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
+# add external dependencies
+add_subdirectory(external)
+
 add_library(${PROJECT_NAME})
 # create clipper::clipper alias
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
@@ -52,14 +55,17 @@ target_sources(${PROJECT_NAME}
     src/clipper.cpp
 )
 
+target_link_libraries(${PROJECT_NAME}
+  PRIVATE
+    fmt::fmt-header-only
+)
+
 target_include_directories(${PROJECT_NAME}
   PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
 
-# add external dependencies
-# add_subdirectory(external)
 
 # tests switch
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND CLIPPER_BUILD_TESTING)
@@ -75,10 +81,10 @@ if(CLIPPER_BUILD_EXAMPLES)
   add_subdirectory(examples)
 endif()
 
+include(GNUInstallDirs)
 # install target
-if(CLIPPER_ENABLE_INSTALL)
+if(FALSE)
 
-  include(GNUInstallDirs)
 
   include(CMakePackageConfigHelpers)
 

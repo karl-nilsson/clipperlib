@@ -37,9 +37,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <functional>
-#include <ostream>
 #include <stdexcept>
-#include <vector>
 
 namespace ClipperLib {
 
@@ -4296,37 +4294,6 @@ void OpenPathsFromPolyTree(PolyTree& polytree, Paths& paths) {
       if(node->IsOpen())
         paths.push_back(node->Contour);
   }
-}
-//------------------------------------------------------------------------------
-
-std::ostream& operator<<(std::ostream& s, const IntPoint& p) {
-  // TODO: fmt
-  // s << fmt::format("({},{})", p.X, p.Y);
-  s << "(" << p.X << "," << p.Y << ")";
-  return s;
-}
-//------------------------------------------------------------------------------
-
-std::ostream& operator<<(std::ostream& s, const Path& p) {
-  if(p.empty())
-    return s;
-  Path::size_type last = p.size() - 1;
-  for(Path::size_type i = 0; i < last; i++)
-    s << "(" << p[i].X << "," << p[i].Y << "), ";
-  s << "(" << p[last].X << "," << p[last].Y << ")\n";
-  // TODO: ranges
-  // s << p | ranges::views::transform(
-  //                  [](IntPoint &point) {return fmt::format"({},{})", point.X, point.Y);})
-  //   << std::endl;
-  return s;
-}
-//------------------------------------------------------------------------------
-
-std::ostream& operator<<(std::ostream& s, const Paths& p) {
-  for(const auto &i : p)
-    s << i;
-  s << "\n";
-  return s;
 }
 //------------------------------------------------------------------------------
 

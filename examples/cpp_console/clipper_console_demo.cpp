@@ -7,7 +7,6 @@
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
-#include <ctime>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -15,6 +14,10 @@
 #include <string>
 #include <vector>
 #include <limits>
+#include <chrono>
+#include <fmt/core.h>
+#include <fmt/os.h>
+#include <fmt/chrono.h>
 
 using namespace ClipperLib;
 
@@ -30,11 +33,7 @@ class SVGBuilder {
    * @return string of hex color value
    */
   static std::string ColorToHtml(unsigned color) {
-    // TODO: fmt
-    // return fmt::format("#{:06X}", color)
-    std::stringstream ss;
-    ss << '#' << std::hex << std::setfill('0') << std::setw(6) << (color & 0xFFFFFF);
-    return ss.str();
+    return fmt::format("#{:06X}", color & 0xFFFFFF);
   }
   //------------------------------------------------------------------------------
 
@@ -136,117 +135,89 @@ public:
     cInt offsetX = -rec.left + margin;
     cInt offsetY = -rec.top + margin;
 
-    std::ofstream file;
-    file.open(filename);
-    if(!file.is_open())
-      return false;
-    file.setf(std::ios::fixed);
-    file.precision(0);
+    auto out = fmt::output_file(filename);
     // clang-format off
-    file << svg_xml_start[0] << ((rec.right - rec.left) + margin * 2) << "px"
-         << svg_xml_start[1] << ((rec.bottom - rec.top) + margin * 2) << "px"
-         << svg_xml_start[2] << ((rec.right - rec.left) + margin * 2) << " "
-         << ((rec.bottom - rec.top) + margin * 2) << svg_xml_start[3];
+    out.print("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
+              "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.0\" "
+              "width=\"{}\" height=\"{}\" viewBox=\"0 0 {} {}\">\n",
+              ((rec.right - rec.left) + margin * 2),
+              ((rec.bottom - rec.top) + margin * 2),
+              ((rec.right - rec.left) + margin * 2),
+              ((rec.bottom - rec.top) + margin * 2)
+              );
     // clang-format on
-    setlocale(LC_NUMERIC, "C");
-    file.precision(2);
 
     // dump polygons to svg
     for(const auto &polyinfo: polyInfos) {
-      file << " <path d=\"";
+      out.print(" <path d=\"");
       for(const auto &path: polyinfo.paths) {
         // skip invalid polygons
         if(path.size() < 3)
           continue;
 
         // clang-format off
-        file << " M " << ((double)path[0].X * scale + offsetX)
-             << " "   << ((double)path[0].Y * scale + offsetY);
+        out.print(" M {:.2f} {:.2f}", (double)path[0].X * scale + offsetX,
+                          (double)path[0].Y * scale + offsetY);
         // clang-format on
 
         for(const auto &point: path) {
           double   x  = (double)point.X * scale;
           double   y  = (double)point.Y * scale;
-          file << " L " << (x + offsetX) << " " << (y + offsetY);
+          out.print(" L {:.2f} {:.2f}", (x + offsetX), (y + offsetY));
         }
-        file << " z";
+        out.print(" z");
       }
       // clang-format off
-      file << poly_end[0] << ColorToHtml(polyinfo.si.brushColor)
-           << poly_end[1] << GetAlphaAsFrac(polyinfo.si.brushColor)
-           << poly_end[2] << (polyinfo.si.pft == PolyFillType::EvenOdd ? "evenodd" : "nonzero")
-           << poly_end[3] << ColorToHtml(polyinfo.si.penColor)
-           << poly_end[4] << GetAlphaAsFrac(polyinfo.si.penColor)
-           << poly_end[5] << polyinfo.si.penWidth
-           << poly_end[6];
+      out.print("\"\n style=\"fill:{}; fill-opacity:{}; fill-rule:{}; stroke:{}; stroke-opacity:{}; stroke-width:{};\" />\n\n",
+                ColorToHtml(polyinfo.si.brushColor),
+                GetAlphaAsFrac(polyinfo.si.brushColor),
+                (polyinfo.si.pft == PolyFillType::EvenOdd ? "evenodd" : "nonzero"),
+                ColorToHtml(polyinfo.si.penColor),
+                GetAlphaAsFrac(polyinfo.si.penColor),
+                polyinfo.si.penWidth
+                );
       // clang-format on
 
       if(polyinfo.si.showCoords) {
-        file << "<g font-family=\"Verdana\" font-size=\"11\" fill=\"black\">\n\n";
+        out.print("<g font-family=\"Verdana\" font-size=\"11\" fill=\"black\">\n\n");
         for(const auto &path: polyinfo.paths) {
           // skip invalid polygons
           if(path.size() < 3)
             continue;
           // print all points of polygon to file
           for(const auto &point: path) {
-            file << "<text x=\"" << (int)(point.X * scale + offsetX)
-                 << "\" y=\"" << (int)(point.Y * scale + offsetY) << "\">"
-                 << point.X << "," << point.Y << "</text>\n\n";
+            out.print("<text x=\"{}\" y=\"{}\">{},{}</text>\n\n",
+                      (int)(point.X * scale + offsetX),
+                      (int)(point.Y * scale + offsetY), point.X, point.Y);
           }
         }
-        file << "</g>\n";
+        out.print("</g>\n");
       }
     }
-    file << "</svg>\n";
-    file.close();
-    setlocale(LC_NUMERIC, "");
+    out.print("</svg>\n");
+    out.close();
     return true;
   }
 };  // SVGBuilder
-//------------------------------------------------------------------------------
 
-// clang-format off
-const std::string SVGBuilder::svg_xml_start[] = {
-  "<?xml version=\"1.0\" standalone=\"no\"?>\n"
-  "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.0//EN\"\n"
-  "\"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd\">\n\n"
-  "<svg width=\"",
-  "\" height=\"",
-  "\" viewBox=\"0 0 ",
-  "\" version=\"1.0\" xmlns=\"http://www.w3.org/2000/svg\">\n\n"
-};
-
-const std::string SVGBuilder::poly_end[] = {
-  "\"\n style=\"fill:",
-  "; fill-opacity:",
-  "; fill-rule:",
-  "; stroke:",
-  "; stroke-opacity:",
-  "; stroke-width:",
-  ";\"/>\n\n"
-};
-// clang-format on
 
 //------------------------------------------------------------------------------
 // Miscellaneous function ...
 //------------------------------------------------------------------------------
 
-bool SaveToFile(const std::string& filename, const Paths& ppg, double scale = 1.0, unsigned decimal_places = 0) {
-  std::ofstream ofs(filename);
-  if(!ofs)
-    return false;
+bool SaveToFile(const std::string& filename, const Paths& ppg, double scale = 1.0, unsigned precision = 0) {
+  auto out = fmt::output_file(filename);
 
-  if(decimal_places > 8)
-    decimal_places = 8;
-  ofs << std::setprecision(decimal_places) << std::fixed;
+  if(precision > 8)
+    precision = 8;
 
   Path pg;
   for(const auto &i: ppg) {
     for(const auto &j: i)
-      ofs << j.X / scale << ", " << j.Y / scale << "," << std::endl;
-    ofs << std::endl;
+      out.print("{0:.{2}f}, {1:.{2}f}\n", j.X / scale, j.Y / scale, precision);
+    out.print("\n");
   }
-  ofs.close();
+  out.close();
   return true;
 }
 //------------------------------------------------------------------------------
@@ -354,13 +325,13 @@ int main(int argc, char* argv[]) {
       loop_cnt = strtol(argv[2], &dummy, 10);
     if(loop_cnt == 0)
       loop_cnt = 1000;
-    std::cout << "\nPerforming " << loop_cnt << " random intersection operations ... ";
+    fmt::print("Performing {} random intersection operations\n", loop_cnt);
     srand((int)time(nullptr));
     int     error_cnt = 0;
     Paths   subject, clip, solution;
     Clipper clpr;
 
-    time_t time_start = clock();
+    auto time_start = std::chrono::high_resolution_clock::now();
     for(int i = 0; i < loop_cnt; i++) {
       MakeRandomPoly(100, 400, 400, subject);
       MakeRandomPoly(100, 400, 400, clip);
@@ -370,10 +341,10 @@ int main(int argc, char* argv[]) {
       if(!clpr.Execute(ClipType::Intersection, solution, PolyFillType::EvenOdd, PolyFillType::EvenOdd))
         error_cnt++;
     }
-    double time_elapsed = double(clock() - time_start) / CLOCKS_PER_SEC;
+    auto time_end = std::chrono::high_resolution_clock::now();
+    auto time_elapsed = time_end - time_start;
 
-    std::cout << "\nFinished in " << time_elapsed << " secs with ";
-    std::cout << error_cnt << " errors.\n\n";
+    fmt::print("Finished in {} with {:d} errors.\n\n", time_elapsed, error_cnt);
     // let's save the very last result ...
     SaveToFile("Subject.txt", subject);
     SaveToFile("Clip.txt", clip);
@@ -440,16 +411,15 @@ int main(int argc, char* argv[]) {
   Paths subject, clip;
 
   if(!LoadFromFile(subject, argv[1], scale)) {
-    std::cerr << "\nCan't open the file " << argv[1] << " or the file format is invalid.\n";
+    fmt::print(stderr, "Can't open the file {} or the file format is invalid.\n", argv[1]);
     return 1;
   }
   if(!LoadFromFile(clip, argv[2], scale)) {
-    std::cerr << "\nCan't open the file " << argv[2] << " or the file format is invalid.\n";
+    fmt::print(stderr, "Can't open the file {} or the file format is invalid.\n", argv[2]);
     return 1;
   }
 
-  ClipType     clipType    = ClipType::Intersection;
-  const std::string sClipType[] = {"INTERSECTION", "UNION", "DIFFERENCE", "XOR"};
+  ClipType     clipType         = ClipType::Intersection;
 
   if(argc > 3) {
     if(ASCII_icompare(argv[3], "XOR"))
@@ -476,11 +446,11 @@ int main(int argc, char* argv[]) {
   Paths solution;
 
   if(!c.Execute(clipType, solution, subj_pft, clip_pft)) {
-    std::cout << (sClipType[static_cast<int>(clipType)] + " failed!\n\n");
+    fmt::print("{} failed!\n\n", clipType);
     return 1;
   }
 
-  std::cout << "\nFinished!\n\n";
+  fmt::print("Finished!\n\n");
   SaveToFile("solution.txt", solution, scale);
 
   // let's see the result too ...
