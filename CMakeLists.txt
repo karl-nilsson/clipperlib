@@ -23,7 +23,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 # disable tests if this is a submodule
 if(NOT IS_SUBPROJECT)
-  # automatically adds BUILD_TESTING switch
+  # automatically adds BUILD_TESTING switch, default ON
   include(CTest)
 endif()
 
@@ -62,7 +62,7 @@ target_include_directories(${PROJECT_NAME}
 # add_subdirectory(external)
 
 # tests switch
-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND CLIPPER_BUILD_TESTING)
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
   add_subdirectory(tests)
 endif()
 

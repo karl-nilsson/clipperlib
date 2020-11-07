@@ -1,9 +1,9 @@
 include(FetchContent)
 
-# doctest
+# fetch doctest repo
 FetchContent_Declare(doctest
   GIT_REPOSITORY https://github.com/onqtam/doctest
-  GIT_TAG 2.4.0
+  GIT_TAG 2.4.1
 )
 # disable doctests' internal tests
 set(DOCTEST_WITH_TESTS OFF CACHE STRING "Omit doctest tests" FORCE)
@@ -13,6 +13,10 @@ FetchContent_MakeAvailable(doctest)
 # list of all test names
 set(TEST_NAMES
   test_main.cpp
+  test_cint.cpp
+  test_intpoint.cpp
+  test_path.cpp
+  test_free_functions.cpp
 )
 
 
