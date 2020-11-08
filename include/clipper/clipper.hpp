@@ -69,9 +69,7 @@
 
 namespace ClipperLib {
 
-/**
- * @brief ClipType enum, boolean operations
- */
+//! @brief ClipType enum, boolean operations
 enum class ClipType {
   //! Intersection
   Intersection,
@@ -83,9 +81,7 @@ enum class ClipType {
   XOR
 };
 
-/**
- * @brief The PolyType enum
- */
+//! @brief The PolyType enum
 enum class PolyType {
   //! Subject polygon
   Subject,
@@ -102,10 +98,14 @@ enum class PolyType {
  * see http://glprogramming.com/red/chapter11.html
  */
 enum class PolyFillType {
-  EvenOdd,   //!
-  NonZero,   //!
-  Positive,  //!
-  Negative   //!
+  //!
+  EvenOdd,
+  //!
+  NonZero,
+  //!
+  Positive,
+  //!
+  Negative
 };
 
 #ifdef use_int32
@@ -445,19 +445,21 @@ void OpenPathsFromPolyTree(PolyTree& polytree, Paths& paths);
 void ReversePath(Path& p);
 void ReversePaths(Paths& p);
 
-/**
- * @brief Rectangle, defined by 4 values
- */
+
+//! @brief Rectangle, defined by 4 sides
 struct IntRect {
-  cInt left;    //! leftmost X value
-  cInt top;     //! topmost Y value
-  cInt right;   //! rightmost X value
-  cInt bottom;  //! bottom Y value
+  //! leftmost X value
+  cInt left;
+  //! topmost Y value
+  cInt top;
+  //! rightmost X value
+  cInt right;
+  //! bottom Y value
+  cInt bottom;
 };
 
-/**
- * @brief The EdgeSide enum
- */
+
+//! @brief The EdgeSide enum
 enum class EdgeSide {
   //!
   Left  = 1,
@@ -473,12 +475,10 @@ struct OutPt;
 struct OutRec;
 struct Join;
 
-//! @typedef Vector of paths
+//! @typedef Vector of OutRec
 typedef std::vector<OutRec*> PolyOutList;
 //! @typedef Vector of edges
 typedef std::vector<TEdge*> EdgeList;
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
 //! @typedef vector of joins
 typedef std::vector<Join*> JoinList;
 //! @typedef vector of lists of intersections
@@ -505,7 +505,7 @@ public:
    * @param Closed whether path is closed
    * @return Whether operation was successful
    */
-  virtual bool AddPath(const Path& pg, PolyType PolyTyp, bool Closed);
+  virtual bool AddPath(const Path& path, PolyType polyType, bool Closed);
 
   /**
    * @brief AddPaths Add a list of paths to a polygon
@@ -514,7 +514,7 @@ public:
    * @param Closed Whether path is closed
    * @return Whether operation was successful
    */
-  bool AddPaths(const Paths& ppg, PolyType PolyTyp, bool Closed);
+  bool AddPaths(const Paths& paths, PolyType polyType, bool Closed);
 
   /**
    * @brief Clear Remove all edges, reset flags
@@ -629,12 +629,25 @@ private:
    * @param startEdge
    */
   void    InsertEdgeIntoAEL(TEdge* edge, TEdge* startEdge);
+  /**
+   * @brief AddEdgeToSEL Insert edge into Selected Edge List
+   * @param edge
+   */
   void    AddEdgeToSEL(TEdge* edge);
+  /**
+   * @brief PopEdgeFromSEL Pop edge from Selected Edge List
+   * @param edge
+   * @return
+   */
   bool    PopEdgeFromSEL(TEdge*& edge);
   /**
    * @brief CopyAELToSEL Copy Active Edge List to ...
    */
   void    CopyAELToSEL();
+  /**
+   * @brief DeleteFromSEL Delete edge from Selected Edge List
+   * @param e
+   */
   void    DeleteFromSEL(TEdge* e);
   void    SwapPositionsInSEL(TEdge* edge1, TEdge* edge2);
   bool    IsContributing(const TEdge& edge) const;
